@@ -1,0 +1,7 @@
+{
+  "username": "admin",
+  "salt": "2f1f728cbf999c139cfe68c51fa5bfad",
+  "hash": "0189912bf5092edc7312adf3e25ca5610a49e2a27ec1d1bcbdc7e22797ef9db4",
+  "iterations": 120000,
+  "digest": "sha256"
+}
