@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ArticleCard from "../../components/ArticleCard.astro";
+import { getAllPosts, getAllTags } from "../../lib/content";
+
+export async function getStaticPaths() {
+  const tags = await getAllTags();
+  return tags.map(({ tag }) => ({
+    params: { tag },
+    props: { tag }
+  }));
+}
+
+const { tag } = Astro.props;
+const posts = (await getAllPosts()).filter((post) => post.data.tags.includes(tag));
+---
+
+<BaseLayout title={`标签：${tag}`} description={`浏览标签「${tag}」下的文章。`}>
+  <section class="page-intro">
+    <p class="eyebrow">Tagged</p>
+    <h1>{tag}</h1>
+    <p>这个标签下共有 {posts.length} 篇文字。</p>
+  </section>
+
+  <section class="archive-list" aria-label={`标签 ${tag} 的文章`}>
+    {
+      posts.map((post) => (
+        <ArticleCard
+          href={`/blog/${post.id}`}
+          title={post.data.title}
+          description={post.data.description}
+          pubDate={post.data.pubDate}
+          tags={post.data.tags}
+          cover={post.data.cover}
+          body={post.body}
+        />
+      ))
+    }
+  </section>
+</BaseLayout>

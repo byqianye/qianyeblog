@@ -1,0 +1,18 @@
+{
+  "name": "quiet-life-blog",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "admin": "node server/admin-server.mjs",
+    "start": "node server/admin-server.mjs",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.12",
+    "astro": "^5.16.4"
+  }
+}

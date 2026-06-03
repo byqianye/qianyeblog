@@ -1,0 +1,33 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getAllTags } from "../../lib/content";
+import homeContent from "../../data/home.json";
+
+const tags = await getAllTags();
+const tagsPage = {
+  eyebrow: homeContent.tagsPageEyebrow ?? "Index",
+  title: homeContent.tagsPageTitle ?? "标签",
+  description:
+    homeContent.tagsPageDescription ??
+    "从主题进入文章：日常、散步、阅读、电影，以及那些暂时还没有名字的生活片段。"
+};
+---
+
+<BaseLayout title={tagsPage.title} description={tagsPage.description}>
+  <section class="page-intro">
+    <p class="eyebrow">{tagsPage.eyebrow}</p>
+    <h1>{tagsPage.title}</h1>
+    <p>{tagsPage.description}</p>
+  </section>
+
+  <section class="tag-cloud" aria-label="标签列表">
+    {
+      tags.map(({ tag, count }) => (
+        <a href={`/tags/${encodeURIComponent(tag)}`}>
+          <span>{tag}</span>
+          <small>{count}</small>
+        </a>
+      ))
+    }
+  </section>
+</BaseLayout>

@@ -1,0 +1,33 @@
+---
+import { formatDate, getReadingMinutes } from "../lib/content";
+
+interface Props {
+  href: string;
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags: string[];
+  cover: string;
+  body?: string;
+  featured?: boolean;
+}
+
+const { href, title, description, pubDate, tags, cover, body = "", featured = false } = Astro.props;
+---
+
+<article class:list={["article-card", { featured }]}>
+  <a class="article-media" href={href} aria-label={`阅读《${title}》`}>
+    <img src={cover} alt="" loading={featured ? "eager" : "lazy"} />
+  </a>
+  <div class="article-content">
+    <div class="article-meta">
+      <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+      <span>{getReadingMinutes(body)}</span>
+    </div>
+    <h2><a href={href}>{title}</a></h2>
+    <p>{description}</p>
+    <div class="tag-row" aria-label="文章标签">
+      {tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
+    </div>
+  </div>
+</article>
