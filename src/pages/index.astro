@@ -15,7 +15,15 @@ const shareLabels = {
   recentTitle: homeContent.recentTitle ?? "一些小分享",
   allSharesLabel: homeContent.allSharesLabel ?? "全部分享",
   publicSharesLabel: homeContent.publicSharesLabel ?? "篇公开分享",
-  rssShareLabel: homeContent.rssShareLabel ?? "订阅这个慢慢分享的地方"
+  rssShareLabel: homeContent.rssShareLabel ?? "订阅这个慢慢分享的地方",
+  journalStripAriaLabel: homeContent.journalStripAriaLabel ?? "站点信息",
+  recentUpdateLabel: homeContent.recentUpdateLabel ?? "最近更新",
+  emptyLatestLabel: homeContent.emptyLatestLabel ?? "即将开始",
+  heroNoteAriaLabel: homeContent.heroNoteAriaLabel ?? "作者分享",
+  quoteLoadingTitle: homeContent.quoteLoadingTitle ?? "正在取一句话",
+  quoteLoadingDescription: homeContent.quoteLoadingDescription ?? "正在取一句诗",
+  quoteLoadingSource: homeContent.quoteLoadingSource ?? "正在加载一言和诗句。",
+  quoteFallbackSource: homeContent.quoteFallbackSource ?? "API 暂时不可用，已显示本地默认文字。"
 };
 ---
 
@@ -28,12 +36,14 @@ const shareLabels = {
     <div class="hero-copy">
       <p class="eyebrow">{homeContent.eyebrow}</p>
       <h1 id="hero-title" class="quote-placeholder" data-fallback={homeContent.title} aria-busy="true">
-        <span aria-hidden="true">正在取一句话</span>
+        <span aria-hidden="true">{shareLabels.quoteLoadingTitle}</span>
       </h1>
       <p class="hero-description quote-placeholder" id="hero-description" data-fallback={homeContent.description} aria-busy="true">
-        <span aria-hidden="true">正在取一句诗</span>
+        <span aria-hidden="true">{shareLabels.quoteLoadingDescription}</span>
       </p>
-      <p class="hero-source sr-only" id="hero-source" aria-live="polite">正在加载一言和诗句。</p>
+      <p class="hero-source sr-only" id="hero-source" aria-live="polite" data-fallback-source={shareLabels.quoteFallbackSource}>
+        {shareLabels.quoteLoadingSource}
+      </p>
       <div class="hero-actions">
         <a class="button primary" href={homeContent.primaryActionHref}>{homeContent.primaryActionLabel}</a>
         <a class="button quiet" href={homeContent.secondaryActionHref}>{homeContent.secondaryActionLabel}</a>
@@ -41,7 +51,7 @@ const shareLabels = {
     </div>
     <div class="hero-panel">
       <img src={homeContent.image} alt={homeContent.imageAlt} />
-      <aside class="hero-note" aria-label="作者分享">
+      <aside class="hero-note" aria-label={shareLabels.heroNoteAriaLabel}>
         <span>{homeContent.noteLabel}</span>
         <p>{homeContent.note}</p>
       </aside>
@@ -198,7 +208,7 @@ const shareLabels = {
         description.classList.remove("quote-placeholder");
         applyLengthClass(description, "quote-desc");
       }
-      if (source) source.textContent = "API 暂时不可用，已显示本地默认文字。";
+      if (source) source.textContent = source.dataset.fallbackSource || "API 暂时不可用，已显示本地默认文字。";
       hero?.classList.remove("quotes-loading");
       hero?.classList.add("quotes-ready");
     });
@@ -250,14 +260,14 @@ const shareLabels = {
     </div>
   </section>
 
-  <section class="journal-strip" aria-label="站点信息">
+  <section class="journal-strip" aria-label={shareLabels.journalStripAriaLabel}>
     <div>
       <span>{posts.length}</span>
       <p>{shareLabels.publicSharesLabel}</p>
     </div>
     <div>
-      <span>{posts[0] ? formatDate(posts[0].data.pubDate) : "即将开始"}</span>
-      <p>最近更新</p>
+      <span>{posts[0] ? formatDate(posts[0].data.pubDate) : shareLabels.emptyLatestLabel}</span>
+      <p>{shareLabels.recentUpdateLabel}</p>
     </div>
     <div>
       <span>RSS</span>

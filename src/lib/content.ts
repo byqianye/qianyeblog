@@ -28,11 +28,11 @@ export function formatDate(date: Date) {
   }).format(date);
 }
 
-export function getReadingMinutes(body = "") {
+export function getReadingMinutes(body = "", template = "{minutes} 分钟读完") {
   const text = body.replace(/<[^>]+>/g, "").trim();
   const chineseChars = text.match(/[\u4e00-\u9fff]/g)?.length ?? 0;
   const latinWords = text.match(/[A-Za-z0-9]+/g)?.length ?? 0;
   const minutes = Math.max(1, Math.ceil((chineseChars + latinWords * 2) / 500));
 
-  return `${minutes} 分钟读完`;
+  return template.replaceAll("{minutes}", String(minutes));
 }

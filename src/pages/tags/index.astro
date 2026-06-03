@@ -9,7 +9,8 @@ const tagsPage = {
   title: homeContent.tagsPageTitle ?? "标签",
   description:
     homeContent.tagsPageDescription ??
-    "从主题进入文章：日常、散步、阅读、电影，以及那些暂时还没有名字的生活片段。"
+    "从主题进入文章：日常、散步、阅读、电影，以及那些暂时还没有名字的生活片段。",
+  listAriaLabel: homeContent.tagsListAriaLabel ?? "标签列表"
 };
 ---
 
@@ -20,7 +21,7 @@ const tagsPage = {
     <p>{tagsPage.description}</p>
   </section>
 
-  <section class="tag-cloud" aria-label="标签列表">
+  <section class="tag-cloud" aria-label={tagsPage.listAriaLabel}>
     {
       tags.map(({ tag, count }) => (
         <a href={`/tags/${encodeURIComponent(tag)}`}>

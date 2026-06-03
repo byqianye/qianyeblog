@@ -2,6 +2,7 @@
 import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { formatDate, getReadingMinutes } from "../../lib/content";
+import homeContent from "../../data/home.json";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -13,6 +14,8 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+const readingTemplate = homeContent.readingMinutesTemplate ?? "{minutes} 分钟读完";
+const tagAriaLabel = homeContent.articleTagsAriaLabel ?? "文章标签";
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>
@@ -21,11 +24,11 @@ const { Content } = await render(post);
       <div>
         <div class="article-meta">
           <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-          <span>{getReadingMinutes(post.body)}</span>
+          <span>{getReadingMinutes(post.body, readingTemplate)}</span>
         </div>
         <h1>{post.data.title}</h1>
         <p>{post.data.description}</p>
-        <div class="tag-row">
+        <div class="tag-row" aria-label={tagAriaLabel}>
           {post.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
         </div>
       </div>
