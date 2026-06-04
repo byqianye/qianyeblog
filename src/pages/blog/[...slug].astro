@@ -1,0 +1,41 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { formatDate, getReadingMinutes } from "../../lib/content";
+import homeContent from "../../data/home.json";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const readingTemplate = homeContent.readingMinutesTemplate ?? "{minutes} 分钟读完";
+const tagAriaLabel = homeContent.articleTagsAriaLabel ?? "文章标签";
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article class="post-page">
+    <header class="post-hero">
+      <div>
+        <div class="article-meta">
+          <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+          <span>{getReadingMinutes(post.body, readingTemplate)}</span>
+        </div>
+        <h1>{post.data.title}</h1>
+        <p>{post.data.description}</p>
+        <div class="tag-row" aria-label={tagAriaLabel}>
+          {post.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
+        </div>
+      </div>
+      <img src={post.data.cover} alt="" />
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>
