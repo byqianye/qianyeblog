@@ -1,0 +1,31 @@
+backend:
+  name: github
+  repo: byqianye/qianyeblog
+  branch: main
+  base_url: https://qianyeblog.pages.dev
+  auth_endpoint: api/auth
+  squash_merges: true
+
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+publish_mode: editorial_workflow
+
+collections:
+  - name: "blog"
+    label: "文章管理"
+    folder: "src/content/blog"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    editor:
+      preview: false
+    fields:
+      - { label: "标题", name: "title", widget: "string" }
+      - { label: "摘要", name: "description", widget: "text" }
+      - { label: "发布时间", name: "pubDate", widget: "datetime" }
+      - { label: "更新时间", name: "updatedDate", widget: "datetime", required: false }
+      - { label: "分类", name: "category", widget: "select", options: ["生活随笔", "随心分享", "阅读笔记", "技术记录"], default: "随心分享" }
+      - { label: "标签", name: "tags", widget: "list", required: false }
+      - { label: "封面图", name: "cover", widget: "image", required: false }
+      - { label: "草稿", name: "draft", widget: "boolean", default: false }
+      - { label: "正文", name: "body", widget: "markdown" }

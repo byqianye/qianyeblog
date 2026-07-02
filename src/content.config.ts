@@ -7,8 +7,10 @@ const blog = defineCollection({
     title: z.string(),
     description: z.string(),
     pubDate: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    category: z.string().default("随心分享"),
     tags: z.array(z.string()).default([]),
-    cover: z.string(),
+    cover: z.string().default("/images/covers/morning-notes.png"),
     draft: z.boolean().default(false)
   })
 });
