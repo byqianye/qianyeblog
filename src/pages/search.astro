@@ -1,0 +1,105 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="搜索" description="搜索千叶博客的文章、标签和摘要。">
+  <section class="page-intro search-intro">
+    <p class="eyebrow">Search</p>
+    <h1>搜索</h1>
+    <p>按标题、摘要、分类、标签或正文关键词查找文章。</p>
+  </section>
+
+  <section class="search-panel" aria-label="站内搜索">
+    <label for="site-search">关键词</label>
+    <input id="site-search" type="search" placeholder="输入关键词..." autocomplete="off" />
+    <p class="search-status" aria-live="polite">正在加载文章索引...</p>
+  </section>
+
+  <section class="search-results" aria-label="搜索结果"></section>
+
+  <script is:inline data-astro-rerun>
+    (() => {
+      const input = document.querySelector("#site-search");
+      const status = document.querySelector(".search-status");
+      const results = document.querySelector(".search-results");
+      if (!input || !status || !results) return;
+
+      const formatter = new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+
+      let posts = [];
+
+      function normalize(value) {
+        return String(value || "").trim().toLowerCase();
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function render(matches, query) {
+        if (!query) {
+          status.textContent = `共 ${posts.length} 篇文章，输入关键词开始搜索。`;
+          results.innerHTML = "";
+          return;
+        }
+
+        status.textContent = matches.length ? `找到 ${matches.length} 篇相关文章。` : "没有找到匹配文章。";
+        results.innerHTML = matches
+          .map((post) => {
+            const tags = post.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
+            return `<article class="search-result">
+              <div class="article-meta">
+                <time datetime="${post.pubDate}">${formatter.format(new Date(post.pubDate))}</time>
+                <span>${escapeHtml(post.category)}</span>
+              </div>
+              <h2><a href="${post.url}">${escapeHtml(post.title)}</a></h2>
+              <p>${escapeHtml(post.description)}</p>
+              <div class="tag-row">${tags}</div>
+            </article>`;
+          })
+          .join("");
+      }
+
+      function search() {
+        const query = normalize(input.value);
+        const terms = query.split(/\s+/).filter(Boolean);
+        const matches = posts.filter((post) => {
+          const haystack = normalize([
+            post.title,
+            post.description,
+            post.category,
+            post.tags.join(" "),
+            post.body
+          ].join(" "));
+          return terms.every((term) => haystack.includes(term));
+        });
+        render(matches, query);
+      }
+
+      fetch("/search.json")
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })
+        .then((data) => {
+          posts = Array.isArray(data) ? data : [];
+          input.disabled = false;
+          status.textContent = `共 ${posts.length} 篇文章，输入关键词开始搜索。`;
+          input.addEventListener("input", search);
+          search();
+        })
+        .catch(() => {
+          input.disabled = true;
+          status.textContent = "文章索引加载失败，请稍后再试。";
+        });
+    })();
+  </script>
+</BaseLayout>

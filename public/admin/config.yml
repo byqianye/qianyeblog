@@ -25,7 +25,7 @@ collections:
       - { label: "发布时间", name: "pubDate", widget: "datetime" }
       - { label: "更新时间", name: "updatedDate", widget: "datetime", required: false }
       - { label: "分类", name: "category", widget: "select", options: ["生活随笔", "随心分享", "阅读笔记", "技术记录"], default: "随心分享" }
-      - { label: "标签", name: "tags", widget: "list", required: false }
-      - { label: "封面图", name: "cover", widget: "image", required: false }
+      - { label: "标签", name: "tags", widget: "select", multiple: true, required: false, options: ["生活", "随笔", "阅读", "笔记", "技术", "工具", "软件", "效率工具", "网站推荐", "影视"] }
+      - { label: "封面图", name: "cover", widget: "image", required: false, hint: "建议上传压缩后的 JPG/WebP/PNG，宽度 1600px 以内。" }
       - { label: "草稿", name: "draft", widget: "boolean", default: false }
       - { label: "正文", name: "body", widget: "markdown" }

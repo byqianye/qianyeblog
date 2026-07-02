@@ -20,6 +20,26 @@ export async function getAllTags() {
     .sort((a, b) => a.tag.localeCompare(b.tag, "zh-Hans-CN"));
 }
 
+export function getRelatedPosts(currentPost, posts, limit = 3) {
+  const currentTags = new Set(currentPost.data.tags);
+
+  return posts
+    .filter((post) => post.id !== currentPost.id)
+    .map((post) => {
+      const sharedTags = post.data.tags.filter((tag) => currentTags.has(tag)).length;
+      const sameCategory = post.data.category === currentPost.data.category ? 1 : 0;
+
+      return {
+        post,
+        score: sharedTags * 2 + sameCategory
+      };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || b.post.data.pubDate.valueOf() - a.post.data.pubDate.valueOf())
+    .slice(0, limit)
+    .map(({ post }) => post);
+}
+
 export function formatDate(date: Date) {
   return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
