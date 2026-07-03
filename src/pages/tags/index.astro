@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import EmptyState from "../../components/EmptyState.astro";
 import { getAllTags } from "../../lib/content";
 import homeContent from "../../data/home.json";
 
@@ -23,12 +24,12 @@ const tagsPage = {
 
   <section class="tag-cloud" aria-label={tagsPage.listAriaLabel}>
     {
-      tags.map(({ tag, count }) => (
+      tags.length > 0 ? tags.map(({ tag, count }) => (
         <a href={`/tags/${encodeURIComponent(tag)}`}>
           <span>{tag}</span>
           <small>{count}</small>
         </a>
-      ))
+      )) : <EmptyState title="还没有标签" description="发布带标签的文章后，这里会自动生成主题索引。" />
     }
   </section>
 </BaseLayout>

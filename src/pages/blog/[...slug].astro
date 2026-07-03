@@ -2,7 +2,10 @@
 import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ArticleCard from "../../components/ArticleCard.astro";
+import EmptyState from "../../components/EmptyState.astro";
+import PostNavigation from "../../components/PostNavigation.astro";
 import { formatDate, getAllPosts, getReadingMinutes, getRelatedPosts } from "../../lib/content";
+import { siteConfig } from "../../site.config";
 import homeContent from "../../data/home.json";
 
 export async function getStaticPaths() {
@@ -15,39 +18,72 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
-const relatedPosts = getRelatedPosts(post, await getAllPosts());
+const allPosts = await getAllPosts();
+const relatedPosts = getRelatedPosts(post, allPosts);
+const currentIndex = allPosts.findIndex((item) => item.id === post.id);
+const previousPost = currentIndex >= 0 ? allPosts[currentIndex + 1] : undefined;
+const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : undefined;
 const readingTemplate = homeContent.readingMinutesTemplate ?? "{minutes} 分钟读完";
 const tagAriaLabel = homeContent.articleTagsAriaLabel ?? "文章标签";
 const tocHeadings = headings.filter((heading) => heading.depth > 1 && heading.depth < 4);
+const shouldShowToc = tocHeadings.length >= 2;
+const canonicalUrl = `${siteConfig.url.replace(/\/$/, "")}/blog/${post.id}`;
+const shareImage = post.data.cover || "/images/covers/morning-notes.png";
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  description: post.data.description,
+  image: shareImage.startsWith("http") ? shareImage : `${siteConfig.url.replace(/\/$/, "")}${shareImage}`,
+  datePublished: post.data.pubDate.toISOString(),
+  dateModified: (post.data.updatedDate ?? post.data.pubDate).toISOString(),
+  author: {
+    "@type": "Person",
+    name: siteConfig.author
+  },
+  publisher: {
+    "@type": "Organization",
+    name: siteConfig.title
+  },
+  mainEntityOfPage: canonicalUrl
+};
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description}>
+<BaseLayout title={post.data.title} description={post.data.description} image={shareImage} type="article" canonical={canonicalUrl}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
   <article class="post-page">
     <header class="post-hero">
       <div>
         <div class="article-meta">
           <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-          <span>{post.data.category}</span>
+          {post.data.updatedDate && <span>更新于 {formatDate(post.data.updatedDate)}</span>}
+          {post.data.category && <span>{post.data.category}</span>}
           <span>{getReadingMinutes(post.body, readingTemplate)}</span>
         </div>
         <h1>{post.data.title}</h1>
-        <p>{post.data.description}</p>
-        <div class="tag-row" aria-label={tagAriaLabel}>
-          {post.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
-        </div>
+        {post.data.description && <p>{post.data.description}</p>}
+        {
+          post.data.tags?.length > 0 && (
+            <div class="tag-row" aria-label={tagAriaLabel}>
+              {post.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
+            </div>
+          )
+        }
       </div>
-      <img src={post.data.cover} alt="" />
+      {shareImage && <img src={shareImage} alt="" width="960" height="660" loading="eager" decoding="async" fetchpriority="high" />}
     </header>
-    <div class="post-body-grid">
+    <div class:list={["post-body-grid", { "has-toc": shouldShowToc }]}>
       {
-        tocHeadings.length > 0 && (
+        shouldShowToc && (
           <aside class="post-toc" aria-label="文章目录">
-            <p>目录</p>
-            <nav>
-              {tocHeadings.map((heading) => (
-                <a class={`depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
-              ))}
-            </nav>
+            <details open>
+              <summary>目录</summary>
+              <nav>
+                {tocHeadings.map((heading) => (
+                  <a class={`depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
+                ))}
+              </nav>
+            </details>
           </aside>
         )
       }
@@ -55,28 +91,95 @@ const tocHeadings = headings.filter((heading) => heading.depth > 1 && heading.de
         <Content />
       </div>
     </div>
-    {
-      relatedPosts.length > 0 && (
-        <section class="related-posts" aria-label="相关文章">
-          <div class="section-heading">
-            <p class="eyebrow">Related</p>
-            <h2>相关文章</h2>
-          </div>
-          <div class="related-grid">
-            {relatedPosts.map((related) => (
-              <ArticleCard
-                href={`/blog/${related.id}`}
-                title={related.data.title}
-                description={related.data.description}
-                pubDate={related.data.pubDate}
-                tags={related.data.tags}
-                cover={related.data.cover}
-                body={related.body}
-              />
-            ))}
-          </div>
-        </section>
-      )
-    }
+    <footer class="post-footer">
+      <div class="post-note-card">本文仅代表个人记录与思考，欢迎交流与分享。</div>
+      <PostNavigation previousPost={previousPost} nextPost={nextPost} />
+      <section class="related-posts" aria-label="相关文章">
+        <div class="section-heading">
+          <p class="eyebrow">Related</p>
+          <h2>相关文章</h2>
+        </div>
+        {
+          relatedPosts.length > 0 ? (
+            <div class="related-grid">
+              {relatedPosts.map((related) => (
+                <ArticleCard
+                  href={`/blog/${related.id}`}
+                  title={related.data.title}
+                  description={related.data.description}
+                  pubDate={related.data.pubDate}
+                  tags={related.data.tags}
+                  category={related.data.category}
+                  cover={related.data.cover}
+                  body={related.body}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="暂时没有相关文章" description="之后有相近主题的文章，会在这里自动推荐。" actionHref="/blog" actionLabel="查看全部文章" />
+          )
+        }
+      </section>
+    </footer>
   </article>
+  <script is:inline data-astro-rerun>
+    (() => {
+      const article = document.querySelector(".post-page");
+      if (!article) return;
+
+      article.querySelectorAll(".prose img").forEach((img) => {
+        img.loading = img.loading || "lazy";
+        img.decoding = "async";
+      });
+
+      article.querySelectorAll(".prose pre").forEach((pre) => {
+        if (pre.parentElement?.classList.contains("code-block-wrap")) return;
+        const wrapper = document.createElement("div");
+        wrapper.className = "code-block-wrap";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "copy-code-button";
+        button.textContent = "复制";
+        pre.before(wrapper);
+        wrapper.append(button, pre);
+        button.addEventListener("click", async () => {
+          const code = pre.querySelector("code")?.innerText || pre.innerText;
+          try {
+            await navigator.clipboard.writeText(code);
+            button.textContent = "已复制";
+          } catch {
+            button.textContent = "复制失败";
+          }
+          window.setTimeout(() => {
+            button.textContent = "复制";
+          }, 1600);
+        });
+      });
+
+      const tocLinks = Array.from(document.querySelectorAll(".post-toc a"));
+      const headings = tocLinks
+        .map((link) => document.getElementById(decodeURIComponent(link.hash.slice(1))))
+        .filter(Boolean);
+      if (!tocLinks.length || !headings.length || !("IntersectionObserver" in window)) return;
+
+      const setActive = (id) => {
+        tocLinks.forEach((link) => {
+          const active = link.hash === `#${id}`;
+          link.toggleAttribute("aria-current", active);
+        });
+      };
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+          if (visible?.target?.id) setActive(visible.target.id);
+        },
+        { rootMargin: "-18% 0px -68% 0px", threshold: 0.01 }
+      );
+
+      headings.forEach((heading) => observer.observe(heading));
+    })();
+  </script>
 </BaseLayout>

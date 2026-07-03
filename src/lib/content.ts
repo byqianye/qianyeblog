@@ -21,13 +21,14 @@ export async function getAllTags() {
 }
 
 export function getRelatedPosts(currentPost, posts, limit = 3) {
-  const currentTags = new Set(currentPost.data.tags);
+  const currentTags = new Set(currentPost.data.tags ?? []);
+  const currentCategory = currentPost.data.category ?? "";
 
   return posts
     .filter((post) => post.id !== currentPost.id)
     .map((post) => {
-      const sharedTags = post.data.tags.filter((tag) => currentTags.has(tag)).length;
-      const sameCategory = post.data.category === currentPost.data.category ? 1 : 0;
+      const sharedTags = (post.data.tags ?? []).filter((tag) => currentTags.has(tag)).length;
+      const sameCategory = currentCategory && post.data.category === currentCategory ? 1 : 0;
 
       return {
         post,

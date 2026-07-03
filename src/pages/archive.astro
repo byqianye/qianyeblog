@@ -1,0 +1,24 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ArticleTimeline from "../components/ArticleTimeline.astro";
+import EmptyState from "../components/EmptyState.astro";
+import { getAllPosts } from "../lib/content";
+
+const posts = await getAllPosts();
+---
+
+<BaseLayout title="文章归档" description="按时间整理所有文章，看看一路写下来的内容。">
+  <section class="page-intro">
+    <p class="eyebrow">Archive</p>
+    <h1>文章归档</h1>
+    <p>按时间整理所有文章，看看一路写下来的内容。</p>
+  </section>
+
+  {
+    posts.length > 0 ? (
+      <ArticleTimeline posts={posts} />
+    ) : (
+      <EmptyState title="还没有文章" description="等第一篇文章发布后，这里会按年份整理所有内容。" actionHref="/blog" actionLabel="查看文章" />
+    )
+  }
+</BaseLayout>

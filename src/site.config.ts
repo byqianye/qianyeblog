@@ -13,6 +13,7 @@ export const siteConfig = {
   nav: [
     { href: "/", label: siteData.navHomeLabel || "首页" },
     { href: "/blog", label: siteData.navBlogLabel || "文章" },
+    { href: "/archive", label: siteData.navArchiveLabel || "归档" },
     { href: "/tags", label: siteData.navTagsLabel || "标签" },
     { href: "/search", label: siteData.navSearchLabel || "搜索" },
     { href: "/about", label: siteData.navAboutLabel || "关于" }

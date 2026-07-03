@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ArticleCard from "../../components/ArticleCard.astro";
+import EmptyState from "../../components/EmptyState.astro";
 import { getAllPosts } from "../../lib/content";
 import homeContent from "../../data/home.json";
 
@@ -24,17 +25,18 @@ const blogPage = {
 
   <section class="archive-list" aria-label={blogPage.listAriaLabel}>
     {
-      posts.map((post) => (
+      posts.length > 0 ? posts.map((post) => (
         <ArticleCard
           href={`/blog/${post.id}`}
           title={post.data.title}
           description={post.data.description}
           pubDate={post.data.pubDate}
           tags={post.data.tags}
+          category={post.data.category}
           cover={post.data.cover}
           body={post.body}
         />
-      ))
+      )) : <EmptyState title="还没有文章" description="第一篇文章发布后会出现在这里。" />
     }
   </section>
 </BaseLayout>

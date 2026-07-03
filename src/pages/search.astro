@@ -45,7 +45,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           .replaceAll('"', "&quot;");
       }
 
+      function highlight(value, terms) {
+        let text = escapeHtml(value);
+        for (const term of terms) {
+          const safeTerm = escapeHtml(term);
+          if (!safeTerm) continue;
+          text = text.replace(new RegExp(`(${safeTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"), "<mark>$1</mark>");
+        }
+        return text;
+      }
+
       function render(matches, query) {
+        const terms = query.split(/\s+/).filter(Boolean);
         if (!query) {
           status.textContent = `共 ${posts.length} 篇文章，输入关键词开始搜索。`;
           results.innerHTML = `<article class="search-result search-empty">
@@ -64,8 +75,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 <time datetime="${escapeHtml(post.pubDate)}">${formatter.format(new Date(post.pubDate))}</time>
                 <span>${escapeHtml(post.category)}</span>
               </div>
-              <h2><a href="${escapeHtml(post.url)}">${escapeHtml(post.title)}</a></h2>
-              <p>${escapeHtml(post.description)}</p>
+              <h2><a href="${escapeHtml(post.url)}">${highlight(post.title, terms)}</a></h2>
+              <p>${highlight(post.description, terms)}</p>
               <div class="tag-row">${tags}</div>
             </article>`;
           })

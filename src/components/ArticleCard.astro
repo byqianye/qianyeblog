@@ -5,15 +5,16 @@ import homeContent from "../data/home.json";
 interface Props {
   href: string;
   title: string;
-  description: string;
+  description?: string;
   pubDate: Date;
-  tags: string[];
-  cover: string;
+  tags?: string[];
+  category?: string;
+  cover?: string;
   body?: string;
   featured?: boolean;
 }
 
-const { href, title, description, pubDate, tags, cover, body = "", featured = false } = Astro.props;
+const { href, title, description = "", pubDate, tags = [], category, cover, body = "", featured = false } = Astro.props;
 const replaceTemplate = (template: string, values: Record<string, string | number>) =>
   Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, String(value)), template);
 const readAriaLabel = replaceTemplate(homeContent.articleReadAriaTemplate ?? "阅读《{title}》", { title });
@@ -21,19 +22,36 @@ const tagAriaLabel = homeContent.articleTagsAriaLabel ?? "文章标签";
 const readingTemplate = homeContent.readingMinutesTemplate ?? "{minutes} 分钟读完";
 ---
 
-<article class:list={["article-card", { featured }]}>
-  <a class="article-media" href={href} aria-label={readAriaLabel}>
-    <img src={cover} alt="" loading={featured ? "eager" : "lazy"} decoding="async" />
-  </a>
+<article class:list={["article-card", { featured, "no-cover": !cover }]}>
+  {
+    cover && (
+      <a class="article-media" href={href} aria-label={readAriaLabel}>
+        <img
+          src={cover}
+          alt=""
+          width={featured ? 1280 : 720}
+          height={featured ? 840 : 450}
+          loading={featured ? "eager" : "lazy"}
+          decoding="async"
+          fetchpriority={featured ? "high" : "auto"}
+        />
+      </a>
+    )
+  }
   <div class="article-content">
     <div class="article-meta">
       <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+      {category && <span>{category}</span>}
       <span>{getReadingMinutes(body, readingTemplate)}</span>
     </div>
     <h2><a href={href}>{title}</a></h2>
-    <p>{description}</p>
-    <div class="tag-row" aria-label={tagAriaLabel}>
-      {tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
-    </div>
+    {description && <p>{description}</p>}
+    {
+      tags.length > 0 && (
+        <div class="tag-row" aria-label={tagAriaLabel}>
+          {tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
+        </div>
+      )
+    }
   </div>
 </article>

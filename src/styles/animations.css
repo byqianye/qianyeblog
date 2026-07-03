@@ -11,7 +11,10 @@ textarea,
 .tag-row a,
 .button,
 .post-toc a,
-.search-result {
+.search-result,
+.timeline-item,
+.post-nav-item,
+.back-to-top {
   transition:
     color var(--duration-fast) ease,
     background-color var(--duration-fast) ease,
@@ -41,7 +44,9 @@ textarea,
   .tag-cloud a,
   .journal-strip > div,
   .related-grid .article-card,
-  .search-result {
+  .search-result,
+  .timeline-item,
+  .post-nav-item {
     animation: scroll-fade-up var(--duration-slow) var(--ease-out) both;
     animation-timeline: view();
     animation-range: entry 8% cover 28%;
@@ -166,7 +171,9 @@ textarea,
   .tag-cloud a,
   .journal-strip > div,
   .related-grid .article-card,
-  .search-result {
+  .search-result,
+  .timeline-item,
+  .post-nav-item {
     animation: none !important;
   }
 

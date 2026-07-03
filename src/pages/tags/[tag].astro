@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ArticleCard from "../../components/ArticleCard.astro";
+import EmptyState from "../../components/EmptyState.astro";
 import { getAllPosts, getAllTags } from "../../lib/content";
 import homeContent from "../../data/home.json";
 
@@ -34,17 +35,18 @@ const tagPage = {
 
   <section class="archive-list" aria-label={tagPage.listAriaLabel}>
     {
-      posts.map((post) => (
+      posts.length > 0 ? posts.map((post) => (
         <ArticleCard
           href={`/blog/${post.id}`}
           title={post.data.title}
           description={post.data.description}
           pubDate={post.data.pubDate}
           tags={post.data.tags}
+          category={post.data.category}
           cover={post.data.cover}
           body={post.body}
         />
-      ))
+      )) : <EmptyState title="这个标签下暂无文章" description="可以回到标签页看看其他主题。" actionHref="/tags" actionLabel="查看标签" />
     }
   </section>
 </BaseLayout>

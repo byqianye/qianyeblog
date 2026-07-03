@@ -62,7 +62,7 @@
   }
 
   .hero::before {
-    inset: -3% -10% auto -10%;
+    inset: -3% 0 auto 0;
     height: 480px;
     opacity: 0.55;
   }
@@ -177,7 +177,8 @@
   }
 
   .recent-grid,
-  .journal-strip {
+  .journal-strip,
+  .post-navigation {
     grid-template-columns: 1fr;
   }
 
@@ -221,7 +222,7 @@
   .tag-row a,
   .tag-row span,
   .tag-cloud a {
-    min-height: 36px;
+    min-height: 44px;
     padding: 6px 11px;
   }
 
@@ -247,8 +248,33 @@
     gap: 22px;
   }
 
+  .post-body-grid.has-toc {
+    grid-template-columns: 1fr;
+  }
+
+  .post-body-grid .prose,
+  .post-body-grid .post-toc {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
   .post-toc {
     position: static;
+  }
+
+  .post-toc details {
+    display: grid;
+    gap: 10px;
+  }
+
+  .code-block-wrap {
+    margin: 1.5em 0;
+  }
+
+  .copy-code-button {
+    position: static;
+    width: 100%;
+    margin-bottom: 8px;
   }
 
   .prose {
@@ -272,6 +298,40 @@
   .tag-cloud {
     gap: 9px;
     padding-bottom: 54px;
+  }
+
+  .article-timeline {
+    gap: 28px;
+    padding-bottom: 54px;
+  }
+
+  .timeline-year {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .timeline-year h2 {
+    position: static;
+  }
+
+  .timeline-items {
+    padding-left: 18px;
+  }
+
+  .timeline-item {
+    padding: 18px;
+  }
+
+  .post-footer {
+    gap: 18px;
+    padding-top: 46px;
+  }
+
+  .back-to-top {
+    right: 14px;
+    bottom: 14px;
+    width: 44px;
+    height: 44px;
   }
 
   .site-footer {
@@ -310,5 +370,13 @@
   .tag-cloud a {
     flex: 1 1 calc(50% - 9px);
     justify-content: space-between;
+  }
+
+  .search-panel {
+    padding: 16px;
+  }
+
+  .post-navigation {
+    gap: 10px;
   }
 }
