@@ -10,6 +10,8 @@ interface Props {
 
 const { title = siteConfig.title, description = siteConfig.description } = Astro.props;
 const pageTitle = title === siteConfig.title ? title : `${title} | ${siteConfig.title}`;
+const isCurrentNavItem = (href: string) =>
+  href === "/" ? Astro.url.pathname === "/" : Astro.url.pathname === href || Astro.url.pathname.startsWith(`${href}/`);
 ---
 
 <!doctype html>
@@ -34,7 +36,7 @@ const pageTitle = title === siteConfig.title ? title : `${title} | ${siteConfig.
       <nav class="desktop-nav" aria-label="主导航">
         {
           siteConfig.nav.map((item) => (
-            <a href={item.href} aria-current={Astro.url.pathname === item.href ? "page" : undefined}>
+            <a href={item.href} aria-current={isCurrentNavItem(item.href) ? "page" : undefined}>
               {item.label}
             </a>
           ))
@@ -46,11 +48,11 @@ const pageTitle = title === siteConfig.title ? title : `${title} | ${siteConfig.
           <span></span>
         </summary>
         <nav aria-label="移动端主导航">
-          {siteConfig.nav.map((item) => <a href={item.href}>{item.label}</a>)}
+          {siteConfig.nav.map((item) => <a href={item.href} aria-current={isCurrentNavItem(item.href) ? "page" : undefined}>{item.label}</a>)}
         </nav>
       </details>
     </header>
-    <main>
+    <main class="page-enter">
       <slot />
     </main>
     <footer class="site-footer">

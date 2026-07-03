@@ -16,6 +16,28 @@ const adminFile = join(root, "server", "admin.json");
 const uploadDir = join(publicDir, "images", "uploads");
 const sessions = new Map();
 const PORT = Number(process.env.PORT || 4321);
+const homeFieldsToRemove = [
+  "siteTitle",
+  "siteAuthor",
+  "siteDescription",
+  "siteUrl",
+  "siteEmail",
+  "brandMark",
+  "favicon",
+  "navHomeLabel",
+  "navBlogLabel",
+  "navTagsLabel",
+  "navSearchLabel",
+  "navAboutLabel",
+  "socialEmailLabel",
+  "socialRssLabel",
+  "hitokotoApi",
+  "poemApi",
+  "quoteLoadingTitle",
+  "quoteLoadingDescription",
+  "quoteLoadingSource",
+  "quoteFallbackSource"
+];
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -101,6 +123,7 @@ function siteToForm(site) {
     navHomeLabel: site.navHomeLabel,
     navBlogLabel: site.navBlogLabel,
     navTagsLabel: site.navTagsLabel,
+    navSearchLabel: site.navSearchLabel,
     navAboutLabel: site.navAboutLabel,
     socialEmailLabel: site.socialEmailLabel,
     socialRssLabel: site.socialRssLabel
@@ -120,6 +143,7 @@ function formToSite(body, existing) {
     navHomeLabel: body.navHomeLabel ?? existing.navHomeLabel,
     navBlogLabel: body.navBlogLabel ?? existing.navBlogLabel,
     navTagsLabel: body.navTagsLabel ?? existing.navTagsLabel,
+    navSearchLabel: body.navSearchLabel ?? existing.navSearchLabel,
     navAboutLabel: body.navAboutLabel ?? existing.navAboutLabel,
     socialEmailLabel: body.socialEmailLabel ?? existing.socialEmailLabel,
     socialRssLabel: body.socialRssLabel ?? existing.socialRssLabel
@@ -128,23 +152,12 @@ function formToSite(body, existing) {
 
 function formToHome(body) {
   const home = { ...body };
-  for (const key of [
-    "siteTitle",
-    "siteAuthor",
-    "siteDescription",
-    "siteUrl",
-    "siteEmail",
-    "brandMark",
-    "favicon",
-    "navHomeLabel",
-    "navBlogLabel",
-    "navTagsLabel",
-    "navAboutLabel",
-    "socialEmailLabel",
-    "socialRssLabel"
-  ]) {
-    delete home[key];
-  }
+  cleanHomeFields(home);
+  return home;
+}
+
+function cleanHomeFields(home) {
+  for (const key of homeFieldsToRemove) delete home[key];
   return home;
 }
 
@@ -464,7 +477,7 @@ async function route(req, res) {
       if (url.pathname === "/api/site" && req.method === "PUT") {
         const body = await readJsonBody(req);
         const [existingHome, existingSite] = await Promise.all([readJson(homeFile), readJson(siteFile)]);
-        const nextHome = { ...existingHome, ...formToHome(body) };
+        const nextHome = cleanHomeFields({ ...existingHome, ...formToHome(body) });
         const nextSite = formToSite(body, existingSite);
         await Promise.all([
           writeFile(homeFile, JSON.stringify(nextHome, null, 2) + "\n", "utf8"),

@@ -31,6 +31,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       });
 
       let posts = [];
+      let searchTimer = 0;
 
       function normalize(value) {
         return String(value || "").trim().toLowerCase();
@@ -47,25 +48,31 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       function render(matches, query) {
         if (!query) {
           status.textContent = `共 ${posts.length} 篇文章，输入关键词开始搜索。`;
-          results.innerHTML = "";
+          results.innerHTML = `<article class="search-result search-empty">
+            <h2>可以从标题、标签或正文里找一找</h2>
+            <p>试试输入「阅读」「工具」「影视」这样的关键词。</p>
+          </article>`;
           return;
         }
 
         status.textContent = matches.length ? `找到 ${matches.length} 篇相关文章。` : "没有找到匹配文章。";
-        results.innerHTML = matches
+        results.innerHTML = matches.length ? matches
           .map((post) => {
             const tags = post.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
-            return `<article class="search-result">
+            return `<article class="search-result fade-up">
               <div class="article-meta">
-                <time datetime="${post.pubDate}">${formatter.format(new Date(post.pubDate))}</time>
+                <time datetime="${escapeHtml(post.pubDate)}">${formatter.format(new Date(post.pubDate))}</time>
                 <span>${escapeHtml(post.category)}</span>
               </div>
-              <h2><a href="${post.url}">${escapeHtml(post.title)}</a></h2>
+              <h2><a href="${escapeHtml(post.url)}">${escapeHtml(post.title)}</a></h2>
               <p>${escapeHtml(post.description)}</p>
               <div class="tag-row">${tags}</div>
             </article>`;
           })
-          .join("");
+          .join("") : `<article class="search-result search-empty fade-up">
+            <h2>暂时没有匹配结果</h2>
+            <p>换个更短的关键词，或回到文章归档慢慢翻。</p>
+          </article>`;
       }
 
       function search() {
@@ -84,6 +91,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         render(matches, query);
       }
 
+      function queueSearch() {
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(search, 150);
+      }
+
       fetch("/search.json")
         .then((response) => {
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -93,7 +105,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           posts = Array.isArray(data) ? data : [];
           input.disabled = false;
           status.textContent = `共 ${posts.length} 篇文章，输入关键词开始搜索。`;
-          input.addEventListener("input", search);
+          input.addEventListener("input", queueSearch);
           search();
         })
         .catch(() => {
