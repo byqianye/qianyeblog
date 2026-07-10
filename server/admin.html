@@ -36,14 +36,25 @@
               <h3>文章</h3>
               <button id="new-post">新建</button>
             </div>
+            <div class="post-tools" aria-label="文章筛选">
+              <input id="post-search" type="search" placeholder="搜索标题、slug、标签..." />
+              <div class="segmented-control" role="group" aria-label="发布状态">
+                <button type="button" class="active" data-post-filter="all">全部</button>
+                <button type="button" data-post-filter="published">已发布</button>
+                <button type="button" data-post-filter="draft">草稿</button>
+              </div>
+            </div>
             <div id="post-list" class="post-list"></div>
           </section>
 
           <form id="post-form" class="editor-pane">
             <input type="hidden" name="originalSlug" />
             <p id="post-edit-status" class="edit-status">正在新建文章</p>
-            <label>Slug<input name="slug" placeholder="morning-notes" required /></label>
             <label>标题<input name="title" required /></label>
+            <div class="slug-field">
+              <label>Slug<input name="slug" placeholder="morning-notes" required /></label>
+              <button type="button" id="generate-slug" class="ghost-button">从标题生成</button>
+            </div>
             <label>摘要<textarea name="description" rows="2" required></textarea></label>
             <div class="field-grid">
               <label>发布日期<input name="pubDate" type="date" required /></label>
@@ -62,7 +73,16 @@
               <div id="cover-options" class="cover-options" aria-label="可选封面图片"></div>
             </div>
             <label class="checkbox"><input name="draft" type="checkbox" /> 草稿，不在访客站显示</label>
-            <label>正文 Markdown<textarea name="content" rows="14" required></textarea></label>
+            <div class="markdown-workbench">
+              <label>正文 Markdown<textarea name="content" rows="16" required></textarea></label>
+              <section class="markdown-preview" aria-label="Markdown 实时预览">
+                <div class="preview-heading">
+                  <span>实时预览</span>
+                  <small>保存前快速检查排版</small>
+                </div>
+                <div id="markdown-preview" class="preview-body"></div>
+              </section>
+            </div>
             <div class="actions">
               <button type="submit">保存并发布</button>
               <button type="button" id="delete-post" class="danger">删除</button>
@@ -209,9 +229,9 @@
         <form id="upload-form" class="upload-box">
           <label>选择图片<input name="image" type="file" accept="image/*" required /></label>
           <button type="submit">上传图片</button>
-          <output id="upload-result"></output>
+          <div id="upload-result" class="upload-result" role="status" aria-live="polite"></div>
         </form>
-        <p class="hint">上传后会返回类似 <code>/images/uploads/xxx.png</code> 的路径，可填入文章封面或首页头图。</p>
+        <p class="hint">上传后会返回类似 <code>/images/uploads/xxx.png</code> 的路径，可填入文章封面或首页头图。建议单张图片不超过 8 MB。</p>
         <section class="image-library-panel" aria-label="图片库">
           <div class="pane-heading">
             <div>

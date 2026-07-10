@@ -22,11 +22,12 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
+    repeating-radial-gradient(circle at 0 0, var(--paper-grain) 0 0.7px, transparent 0.8px 3px),
     linear-gradient(90deg, rgba(165, 91, 63, 0.026) 1px, transparent 1px),
     linear-gradient(180deg, rgba(111, 130, 110, 0.052), transparent 42rem),
     radial-gradient(circle at 18% 0%, rgba(220, 181, 137, 0.18), transparent 34rem),
     var(--bg);
-  background-size: 72px 72px, auto, auto, auto;
+  background-size: 4px 4px, 72px 72px, auto, auto, auto;
   color: var(--text);
   font-family: var(--font-sans);
   line-height: 1.75;
@@ -44,6 +45,24 @@ a {
 a:hover {
   color: var(--accent);
   text-decoration-color: currentColor;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  left: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 760;
+  text-decoration: none;
+  transform: translateY(-160%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 button,

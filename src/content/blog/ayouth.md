@@ -4,6 +4,8 @@ description: "「资源导航站 / 聚合站」"
 pubDate: "2026-06-03"
 tags: ["影视"]
 cover: "/images/uploads/1780499374456-1.png"
+coverWidth: 2560
+coverHeight: 1346
 draft: false
 ---
 

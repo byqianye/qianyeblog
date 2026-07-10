@@ -9,10 +9,22 @@
     "preview": "astro preview",
     "admin": "node server/admin-server.mjs",
     "start": "node server/admin-server.mjs",
+    "init:admin": "node server/init-admin.mjs",
+    "check": "astro check",
+    "test:site": "corepack pnpm build && node .tools/verify-site.mjs",
+    "test:admin": "node .tools/admin-smoke.mjs",
+    "test": "corepack pnpm check && corepack pnpm test:site && corepack pnpm test:admin",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.12",
-    "astro": "^5.16.4"
+    "astro": "^5.16.4",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@types/node": "^26.1.1",
+    "playwright": "^1.61.1",
+    "typescript": "^5.9.3"
   }
 }

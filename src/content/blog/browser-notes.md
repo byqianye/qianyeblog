@@ -4,6 +4,8 @@ description: "奶酪增强版Chorme/Firefox"
 pubDate: "2026-06-04"
 tags: ["工具"]
 cover: "/images/uploads/1780581841881-1.png"
+coverWidth: 1975
+coverHeight: 796
 draft: false
 ---
 

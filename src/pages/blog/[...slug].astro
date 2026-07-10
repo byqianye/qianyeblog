@@ -4,6 +4,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import ArticleCard from "../../components/ArticleCard.astro";
 import EmptyState from "../../components/EmptyState.astro";
 import PostNavigation from "../../components/PostNavigation.astro";
+import ResponsiveImage from "../../components/ResponsiveImage.astro";
 import { formatDate, getAllPosts, getReadingMinutes, getRelatedPosts } from "../../lib/content";
 import { siteConfig } from "../../site.config";
 import homeContent from "../../data/home.json";
@@ -50,7 +51,7 @@ const jsonLd = {
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} image={shareImage} type="article" canonical={canonicalUrl}>
-  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
   <article class="post-page">
     <header class="post-hero">
       <div>
@@ -70,7 +71,7 @@ const jsonLd = {
           )
         }
       </div>
-      {shareImage && <img src={shareImage} alt="" width="960" height="660" loading="eager" decoding="async" fetchpriority="high" />}
+      {shareImage && <ResponsiveImage src={shareImage} alt="" width={post.data.coverWidth ?? 1672} height={post.data.coverHeight ?? 941} loading="eager" fetchpriority="high" sizes="(max-width: 860px) 100vw, 42vw" />}
     </header>
     <div class:list={["post-body-grid", { "has-toc": shouldShowToc }]}>
       {
@@ -96,7 +97,7 @@ const jsonLd = {
       <PostNavigation previousPost={previousPost} nextPost={nextPost} />
       <section class="related-posts" aria-label="相关文章">
         <div class="section-heading">
-          <p class="eyebrow">Related</p>
+          <p class="eyebrow">相关文章</p>
           <h2>相关文章</h2>
         </div>
         {
@@ -111,6 +112,8 @@ const jsonLd = {
                   tags={related.data.tags}
                   category={related.data.category}
                   cover={related.data.cover}
+                  coverWidth={related.data.coverWidth}
+                  coverHeight={related.data.coverHeight}
                   body={related.body}
                 />
               ))}

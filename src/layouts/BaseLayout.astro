@@ -1,5 +1,4 @@
 ---
-import { ClientRouter } from "astro:transitions";
 import { siteConfig } from "../site.config";
 import BackToTop from "../components/BackToTop.astro";
 import "../styles/global.css";
@@ -25,6 +24,15 @@ const canonicalUrl = canonical ?? `${siteUrl}${Astro.url.pathname}`;
 const absoluteImage = image.startsWith("http") ? image : `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
 const isCurrentNavItem = (href: string) =>
   href === "/" ? Astro.url.pathname === "/" : Astro.url.pathname === href || Astro.url.pathname.startsWith(`${href}/`);
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteConfig.title,
+  url: siteUrl,
+  description: siteConfig.description,
+  inLanguage: "zh-CN",
+  author: { "@type": "Person", name: siteConfig.author }
+};
 ---
 
 <!doctype html>
@@ -33,7 +41,8 @@ const isCurrentNavItem = (href: string) =>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f4efe6" />
+    <meta name="theme-color" content="#e8dcc7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#283324" media="(prefers-color-scheme: dark)" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" href={siteConfig.favicon} type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title={siteConfig.title} href="/rss.xml" />
@@ -49,10 +58,11 @@ const isCurrentNavItem = (href: string) =>
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={absoluteImage} />
     <title>{pageTitle}</title>
-    <ClientRouter />
+    {type === "website" && <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />}
   </head>
   <body>
     <div class="reading-progress" aria-hidden="true"></div>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
       <a class="brand" href="/" aria-label={`${siteConfig.title} 首页`}>
         <span class="brand-mark" aria-hidden="true">{siteConfig.brandMark}</span>
@@ -77,7 +87,7 @@ const isCurrentNavItem = (href: string) =>
         </nav>
       </details>
     </header>
-    <main class="page-enter">
+    <main id="main-content" class="page-enter" tabindex="-1">
       <slot />
     </main>
     <footer class="site-footer">
@@ -87,7 +97,7 @@ const isCurrentNavItem = (href: string) =>
       </div>
     </footer>
     <BackToTop />
-    <script is:inline data-astro-rerun>
+    <script is:inline>
       (() => {
         const progress = document.querySelector(".reading-progress");
         const backToTop = document.querySelector(".back-to-top");

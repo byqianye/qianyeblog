@@ -1,6 +1,6 @@
 import siteData from "./data/site.json";
 
-const email = siteData.email || "hello@example.com";
+const email = siteData.email?.trim() || "";
 
 export const siteConfig = {
   title: siteData.title || "浅靥",
@@ -19,7 +19,7 @@ export const siteConfig = {
     { href: "/about", label: siteData.navAboutLabel || "关于" }
   ],
   social: [
-    { href: `mailto:${email}`, label: siteData.socialEmailLabel || "Email" },
+    ...(email ? [{ href: `mailto:${email}`, label: siteData.socialEmailLabel || "Email" }] : []),
     { href: "/rss.xml", label: siteData.socialRssLabel || "RSS" }
   ]
 };

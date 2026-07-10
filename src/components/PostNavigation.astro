@@ -1,7 +1,9 @@
 ---
+import type { CollectionEntry } from "astro:content";
+
 interface Props {
-  previousPost?: any;
-  nextPost?: any;
+  previousPost?: CollectionEntry<"blog">;
+  nextPost?: CollectionEntry<"blog">;
 }
 
 const { previousPost, nextPost } = Astro.props;

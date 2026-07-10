@@ -11,6 +11,8 @@ const blog = defineCollection({
     category: z.string().default("随心分享"),
     tags: z.array(z.string()).default([]),
     cover: z.string().default("/images/covers/morning-notes.png"),
+    coverWidth: z.number().int().positive().optional(),
+    coverHeight: z.number().int().positive().optional(),
     draft: z.boolean().default(false)
   })
 });

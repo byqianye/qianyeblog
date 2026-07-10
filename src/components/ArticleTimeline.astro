@@ -1,18 +1,19 @@
 ---
 import { formatDate, getReadingMinutes } from "../lib/content";
+import type { CollectionEntry } from "astro:content";
 import homeContent from "../data/home.json";
 
 interface Props {
-  posts: any[];
+  posts: CollectionEntry<"blog">[];
 }
 
 const { posts } = Astro.props;
 const readingTemplate = homeContent.readingMinutesTemplate ?? "{minutes} 分钟读完";
-const groups = posts.reduce((items: Map<string, any[]>, post) => {
+const groups = posts.reduce((items: Map<string, CollectionEntry<"blog">[]>, post) => {
   const year = String(post.data.pubDate.getFullYear());
   items.set(year, [...(items.get(year) ?? []), post]);
   return items;
-}, new Map<string, any[]>());
+}, new Map<string, CollectionEntry<"blog">[]>());
 ---
 
 <section class="article-timeline" aria-label="文章归档列表">
@@ -33,7 +34,7 @@ const groups = posts.reduce((items: Map<string, any[]>, post) => {
                 {post.data.description && <p>{post.data.description}</p>}
                 {post.data.tags?.length > 0 && (
                   <div class="tag-row" aria-label="文章标签">
-                    {post.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
+                    {post.data.tags.map((tag: string) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}</a>)}
                   </div>
                 )}
               </div>

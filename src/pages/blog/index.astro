@@ -34,6 +34,8 @@ const blogPage = {
           tags={post.data.tags}
           category={post.data.category}
           cover={post.data.cover}
+          coverWidth={post.data.coverWidth}
+          coverHeight={post.data.coverHeight}
           body={post.body}
         />
       )) : <EmptyState title="还没有文章" description="第一篇文章发布后会出现在这里。" />

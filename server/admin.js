@@ -3,7 +3,9 @@ const state = {
   currentSlug: null,
   home: null,
   images: [],
-  activeImageInput: null
+  activeImageInput: null,
+  postFilter: "all",
+  postQuery: ""
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -50,6 +52,130 @@ function formatSize(bytes) {
   if (!Number.isFinite(bytes)) return "";
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function formatDimensions(image) {
+  return image.width && image.height ? `${image.width} x ${image.height}` : "尺寸未知";
+}
+
+function copyText(text, label = "已复制") {
+  navigator.clipboard?.writeText(text).then(() => setStatus(label)).catch(() => setStatus(text));
+}
+
+function makeSlug(title) {
+  const charMap = {
+    的: "de", 一: "yi", 是: "shi", 不: "bu", 了: "le", 在: "zai", 人: "ren", 有: "you",
+    我: "wo", 他: "ta", 这: "zhe", 中: "zhong", 大: "da", 来: "lai", 上: "shang",
+    个: "ge", 国: "guo", 到: "dao", 说: "shuo", 们: "men", 为: "wei", 子: "zi",
+    和: "he", 你: "ni", 地: "di", 出: "chu", 道: "dao", 也: "ye", 时: "shi",
+    年: "nian", 得: "de", 就: "jiu", 那: "na", 要: "yao", 下: "xia", 以: "yi",
+    生: "sheng", 会: "hui", 自: "zi", 着: "zhe", 去: "qu", 之: "zhi", 过: "guo",
+    家: "jia", 学: "xue", 对: "dui", 可: "ke", 她: "ta", 里: "li", 后: "hou",
+    小: "xiao", 么: "me", 心: "xin", 多: "duo", 天: "tian", 而: "er", 能: "neng",
+    好: "hao", 都: "dou", 然: "ran", 没: "mei", 日: "ri", 于: "yu", 起: "qi",
+    还: "hai", 发: "fa", 成: "cheng", 事: "shi", 只: "zhi", 作: "zuo", 当: "dang",
+    想: "xiang", 看: "kan", 文: "wen", 章: "zhang", 新: "xin", 记: "ji", 录: "lu",
+    读: "du", 书: "shu", 影: "ying", 视: "shi", 工: "gong", 具: "ju", 浅: "qian",
+    靥: "ye", 博: "bo", 客: "ke", 网: "wang", 站: "zhan", 分: "fen", 享: "xiang"
+  };
+  const converted = Array.from(String(title || "").trim().toLowerCase())
+    .map((char) => {
+      if (/[a-z0-9]/.test(char)) return char;
+      if (/[\s_-]/.test(char)) return "-";
+      return charMap[char] ? `-${charMap[char]}-` : "-";
+    })
+    .join("");
+  return converted
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+}
+
+function renderInlineMarkdown(value) {
+  return escapeHtml(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+}
+
+function renderMarkdownPreview() {
+  const target = $("#markdown-preview");
+  const textarea = $("#post-form").elements.content;
+  if (!target || !textarea) return;
+
+  const lines = String(textarea.value || "").split(/\r?\n/);
+  const blocks = [];
+  let paragraph = [];
+  let list = [];
+  let inCode = false;
+  let code = [];
+
+  function flushParagraph() {
+    if (!paragraph.length) return;
+    blocks.push(`<p>${renderInlineMarkdown(paragraph.join(" "))}</p>`);
+    paragraph = [];
+  }
+
+  function flushList() {
+    if (!list.length) return;
+    blocks.push(`<ul>${list.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</ul>`);
+    list = [];
+  }
+
+  for (const line of lines) {
+    if (line.trim().startsWith("```")) {
+      if (inCode) {
+        blocks.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+        code = [];
+        inCode = false;
+      } else {
+        flushParagraph();
+        flushList();
+        inCode = true;
+      }
+      continue;
+    }
+    if (inCode) {
+      code.push(line);
+      continue;
+    }
+    if (!line.trim()) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      flushList();
+      const level = heading[1].length;
+      blocks.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
+      continue;
+    }
+    const listItem = line.match(/^[-*]\s+(.+)$/);
+    if (listItem) {
+      flushParagraph();
+      list.push(listItem[1]);
+      continue;
+    }
+    const quote = line.match(/^>\s+(.+)$/);
+    if (quote) {
+      flushParagraph();
+      flushList();
+      blocks.push(`<blockquote>${renderInlineMarkdown(quote[1])}</blockquote>`);
+      continue;
+    }
+    paragraph.push(line.trim());
+  }
+  flushParagraph();
+  flushList();
+  if (code.length) blocks.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+
+  target.innerHTML = blocks.join("") || `<p class="hint">预览会随着正文输入实时更新。</p>`;
 }
 
 function getImageInput() {
@@ -101,7 +227,7 @@ function createImageButton(image, { compact = false, selected = false } = {}) {
   button.innerHTML = `
     <img src="${escapeHtml(image.path)}" alt="" loading="lazy" />
     <span>${escapeHtml(image.name)}</span>
-    ${compact ? "" : `<small>${formatSize(image.size)}</small>`}
+    ${compact ? "" : `<small>${formatSize(image.size)} · ${formatDimensions(image)}</small>`}
   `;
   button.addEventListener("click", () => fillImageInput(image.path));
   button.addEventListener("pointerenter", (event) => showImagePreview(image, event));
@@ -256,13 +382,17 @@ async function api(path, options = {}) {
 
 function formToPost(form) {
   const data = Object.fromEntries(new FormData(form));
+  const cover = String(data.cover || "").trim();
+  const image = state.images.find((item) => item.path === cover);
   return {
     slug: data.slug,
     title: data.title,
     description: data.description,
     pubDate: data.pubDate,
     tags: parseTagsInput(data.tags),
-    cover: data.cover,
+    cover,
+    coverWidth: image?.width,
+    coverHeight: image?.height,
     draft: form.elements.draft.checked,
     content: data.content
   };
@@ -283,13 +413,33 @@ function fillPostForm(post = {}) {
   $("#post-edit-status").textContent = post.slug ? `正在修改：${post.title || post.slug}` : "正在新建文章";
   renderTagOptions();
   renderCoverOptions();
+  renderMarkdownPreview();
   renderPosts();
+}
+
+function getVisiblePosts() {
+  const query = state.postQuery.trim().toLowerCase();
+  return state.posts.filter((post) => {
+    const statusMatch =
+      state.postFilter === "all" ||
+      (state.postFilter === "draft" && post.draft) ||
+      (state.postFilter === "published" && !post.draft);
+    const haystack = [post.title, post.slug, post.description, ...(Array.isArray(post.tags) ? post.tags : [])]
+      .join(" ")
+      .toLowerCase();
+    return statusMatch && (!query || haystack.includes(query));
+  });
 }
 
 function renderPosts() {
   const list = $("#post-list");
   list.innerHTML = "";
-  for (const post of state.posts) {
+  const posts = getVisiblePosts();
+  if (!posts.length) {
+    list.innerHTML = `<p class="hint">没有匹配的文章。</p>`;
+    return;
+  }
+  for (const post of posts) {
     const item = document.createElement("article");
     item.className = `post-item${post.slug === state.currentSlug ? " active" : ""}`;
     item.innerHTML = `
@@ -343,6 +493,31 @@ async function init() {
   $$(".nav-item").forEach((button) => button.addEventListener("click", () => switchPanel(button.dataset.panel)));
   $("#post-form").elements.tags.addEventListener("input", renderTagOptions);
   $("#post-form").elements.cover.addEventListener("input", renderCoverOptions);
+  $("#post-form").elements.content.addEventListener("input", renderMarkdownPreview);
+  $("#post-form").elements.title.addEventListener("blur", () => {
+    const form = $("#post-form");
+    if (form.elements.originalSlug.value || form.elements.slug.value.trim()) return;
+    const slug = makeSlug(form.elements.title.value);
+    if (slug) form.elements.slug.value = slug;
+  });
+  $("#generate-slug").addEventListener("click", () => {
+    const form = $("#post-form");
+    const slug = makeSlug(form.elements.title.value);
+    if (!slug) return setStatus("无法从标题生成安全 slug，请手动输入英文、数字或连字符。");
+    form.elements.slug.value = slug;
+    setStatus(`已生成 slug：${slug}`);
+  });
+  $("#post-search").addEventListener("input", (event) => {
+    state.postQuery = event.currentTarget.value;
+    renderPosts();
+  });
+  $$("[data-post-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.postFilter = button.dataset.postFilter;
+      $$("[data-post-filter]").forEach((item) => item.classList.toggle("active", item === button));
+      renderPosts();
+    });
+  });
   $$(imageInputSelector).forEach((input) => {
     input.addEventListener("focus", () => {
       state.activeImageInput = input;
@@ -435,11 +610,21 @@ async function init() {
   $("#upload-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const file = event.currentTarget.elements.image.files?.[0];
+    if (file && file.size > 8 * 1024 * 1024) {
+      setStatus("图片超过 8 MB，请先压缩后再上传。");
+      return;
+    }
     setStatus("上传图片", true);
     try {
       const result = await api("/api/upload", { method: "POST", body: formData });
-      $("#upload-result").textContent = result.path;
-      navigator.clipboard?.writeText(result.path).catch(() => {});
+      $("#upload-result").innerHTML = `<div class="upload-result-card">
+        <code>${escapeHtml(result.path)}</code>
+        <span>${escapeHtml(formatSize(result.size))} · ${escapeHtml(formatDimensions(result))}</span>
+        <button type="button" class="ghost-button" data-copy-upload>复制路径</button>
+      </div>`;
+      $("[data-copy-upload]")?.addEventListener("click", () => copyText(result.path, "图片路径已复制"));
+      copyText(result.path, "图片已上传，路径已复制");
       await loadImages();
       setStatus("图片已上传，路径已显示");
     } catch (error) {

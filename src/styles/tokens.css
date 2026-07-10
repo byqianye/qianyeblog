@@ -1,22 +1,22 @@
 :root {
   color-scheme: light dark;
-  --bg: #f4efe6;
-  --bg-soft: #ebe2d4;
-  --surface: #fffaf1;
-  --surface-muted: #eadfce;
-  --text: #26322e;
-  --muted: #6e746c;
-  --line: rgba(38, 50, 46, 0.14);
-  --accent: #b34a2f;
-  --accent-quiet: #d9ad91;
-  --sage: #6e846c;
-  --teal: #315f64;
-  --paper-grain: rgba(255, 250, 241, 0.62);
+  --bg: #e8dcc7;
+  --bg-soft: #d4b895;
+  --surface: #dfceb1;
+  --surface-muted: #c8b38f;
+  --text: #31412d;
+  --muted: #596153;
+  --line: rgba(96, 108, 56, 0.28);
+  --accent: #c66b3d;
+  --accent-quiet: #b08b6e;
+  --sage: #8b9d83;
+  --teal: #606c38;
+  --paper-grain: rgba(96, 108, 56, 0.06);
   --glass-bg: color-mix(in srgb, var(--surface) 78%, transparent);
-  --glass-border: rgba(255, 255, 255, 0.46);
-  --shadow-soft: 0 10px 26px rgba(38, 50, 46, 0.07);
-  --shadow-card: 0 18px 42px rgba(38, 50, 46, 0.10);
-  --shadow-hover: 0 24px 62px rgba(38, 50, 46, 0.15);
+  --glass-border: rgba(96, 108, 56, 0.3);
+  --shadow-soft: 0 10px 26px rgba(49, 65, 45, 0.11);
+  --shadow-card: 0 18px 42px rgba(49, 65, 45, 0.16);
+  --shadow-hover: 0 24px 62px rgba(49, 65, 45, 0.2);
   --radius-sm: 12px;
   --radius-md: 18px;
   --radius-lg: 22px;
@@ -40,22 +40,22 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #151917;
-    --bg-soft: #1d2320;
-    --surface: #202620;
-    --surface-muted: #2b332d;
-    --text: #efe7da;
-    --muted: #b4aca1;
-    --line: rgba(239, 231, 218, 0.14);
-    --accent: #df8263;
-    --accent-quiet: #6a4a3f;
-    --sage: #9eb194;
-    --teal: #86b6ba;
-    --paper-grain: rgba(255, 255, 255, 0.035);
+    --bg: #283324;
+    --bg-soft: #364330;
+    --surface: #3d4a35;
+    --surface-muted: #516047;
+    --text: #e8dcc7;
+    --muted: #d4b895;
+    --line: rgba(212, 184, 149, 0.24);
+    --accent: #c66b3d;
+    --accent-quiet: #8b9d83;
+    --sage: #b0c09f;
+    --teal: #c08e3a;
+    --paper-grain: rgba(232, 220, 199, 0.04);
     --glass-bg: color-mix(in srgb, var(--surface) 72%, transparent);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --shadow-soft: 0 10px 26px rgba(0, 0, 0, 0.22);
-    --shadow-card: 0 18px 42px rgba(0, 0, 0, 0.28);
-    --shadow-hover: 0 24px 62px rgba(0, 0, 0, 0.34);
+    --glass-border: rgba(212, 184, 149, 0.18);
+    --shadow-soft: 0 10px 26px rgba(40, 51, 36, 0.28);
+    --shadow-card: 0 18px 42px rgba(40, 51, 36, 0.34);
+    --shadow-hover: 0 24px 62px rgba(40, 51, 36, 0.42);
   }
 }

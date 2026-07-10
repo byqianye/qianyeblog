@@ -1,5 +1,12 @@
 node_modules/
 .astro/
 dist/
+.pnpm-store/
+artifacts/
+.upload-qianyeblog/
+.tools/pnpm/
+.tools/*.tgz
+server/admin.json
 .env
 .env.*
+!.env.example

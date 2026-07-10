@@ -1,4 +1,7 @@
-import { getCollection } from "astro:content";
+import { getCollection, type CollectionEntry } from "astro:content";
+
+type BlogPost = CollectionEntry<"blog">;
+type ScoredPost = { post: BlogPost; score: number };
 
 export async function getAllPosts() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -20,13 +23,13 @@ export async function getAllTags() {
     .sort((a, b) => a.tag.localeCompare(b.tag, "zh-Hans-CN"));
 }
 
-export function getRelatedPosts(currentPost, posts, limit = 3) {
+export function getRelatedPosts(currentPost: BlogPost, posts: BlogPost[], limit = 3): BlogPost[] {
   const currentTags = new Set(currentPost.data.tags ?? []);
   const currentCategory = currentPost.data.category ?? "";
 
   return posts
     .filter((post) => post.id !== currentPost.id)
-    .map((post) => {
+    .map((post): ScoredPost => {
       const sharedTags = (post.data.tags ?? []).filter((tag) => currentTags.has(tag)).length;
       const sameCategory = currentCategory && post.data.category === currentCategory ? 1 : 0;
 
@@ -35,10 +38,10 @@ export function getRelatedPosts(currentPost, posts, limit = 3) {
         score: sharedTags * 2 + sameCategory
       };
     })
-    .filter(({ score }) => score > 0)
+    .filter(({ score }: ScoredPost) => score > 0)
     .sort((a, b) => b.score - a.score || b.post.data.pubDate.valueOf() - a.post.data.pubDate.valueOf())
     .slice(0, limit)
-    .map(({ post }) => post);
+    .map(({ post }: ScoredPost) => post);
 }
 
 export function formatDate(date: Date) {

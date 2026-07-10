@@ -1,18 +1,14 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ArticleCard from "../components/ArticleCard.astro";
+import ResponsiveImage from "../components/ResponsiveImage.astro";
 import { getAllPosts, formatDate } from "../lib/content";
 import { siteConfig } from "../site.config";
 import homeContent from "../data/home.json";
-import quotes from "../data/quotes.json";
 
 const posts = await getAllPosts();
 const featured = posts[0];
 const recent = posts.slice(1, 3);
-const heroQuoteFallback = quotes[0] ?? {
-  title: homeContent.title,
-  description: homeContent.description
-};
 const shareLabels = {
   featuredEyebrow: homeContent.featuredEyebrow ?? "精选分享",
   featuredTitle: homeContent.featuredTitle ?? "最近分享",
@@ -29,55 +25,32 @@ const shareLabels = {
 ---
 
 <BaseLayout title={siteConfig.title} description={siteConfig.description}>
-  <section class="hero quotes-ready">
+  <section class="hero">
     <div class="hero-copy">
       <p class="eyebrow">{homeContent.eyebrow}</p>
-      <h1 id="hero-title">{heroQuoteFallback.title}</h1>
-      <p class="hero-description" id="hero-description">{heroQuoteFallback.description}</p>
+      <h1>{homeContent.title}</h1>
+      <p class="hero-description">{homeContent.description}</p>
       <div class="hero-actions">
         <a class="button primary" href={homeContent.primaryActionHref}>{homeContent.primaryActionLabel}</a>
         <a class="button quiet" href={homeContent.secondaryActionHref}>{homeContent.secondaryActionLabel}</a>
       </div>
     </div>
     <div class="hero-panel">
-      <img src={homeContent.image} alt={homeContent.imageAlt} />
+      <ResponsiveImage
+        src={homeContent.image}
+        alt={homeContent.imageAlt}
+        width={homeContent.imageWidth ?? 1672}
+        height={homeContent.imageHeight ?? 941}
+        loading="eager"
+        fetchpriority="high"
+        sizes="(max-width: 860px) 100vw, 48vw"
+      />
       <aside class="hero-note" aria-label={shareLabels.heroNoteAriaLabel}>
         <span>{homeContent.noteLabel}</span>
         <p>{homeContent.note}</p>
       </aside>
     </div>
   </section>
-
-  <script id="hero-quotes" type="application/json" set:html={JSON.stringify(quotes)}></script>
-  <script is:inline data-astro-rerun>
-    (() => {
-      const title = document.querySelector("#hero-title");
-      const description = document.querySelector("#hero-description");
-      const data = document.querySelector("#hero-quotes");
-      if (!title || !description || !data) return;
-
-      function applyLengthClass(element, prefix) {
-        const textLength = Array.from(element.textContent || "").length;
-        const size = textLength > 42 ? "long" : textLength > 24 ? "medium" : "short";
-        element.classList.remove(`${prefix}-short`, `${prefix}-medium`, `${prefix}-long`);
-        element.classList.add(`${prefix}-${size}`);
-      }
-
-      try {
-        const quotes = JSON.parse(data.textContent || "[]").filter((item) => item?.title && item?.description);
-        const quote = quotes[Math.floor(Math.random() * quotes.length)];
-        if (quote) {
-          title.textContent = quote.title;
-          description.textContent = quote.description;
-        }
-      } catch {
-        // The static fallback already renders above.
-      }
-
-      applyLengthClass(title, "quote-title");
-      applyLengthClass(description, "quote-desc");
-    })();
-  </script>
 
   {
     featured && (
@@ -94,6 +67,8 @@ const shareLabels = {
           tags={featured.data.tags}
           category={featured.data.category}
           cover={featured.data.cover}
+          coverWidth={featured.data.coverWidth}
+          coverHeight={featured.data.coverHeight}
           body={featured.body}
           featured
         />
@@ -120,6 +95,8 @@ const shareLabels = {
             tags={post.data.tags}
             category={post.data.category}
             cover={post.data.cover}
+            coverWidth={post.data.coverWidth}
+            coverHeight={post.data.coverHeight}
             body={post.body}
           />
         ))

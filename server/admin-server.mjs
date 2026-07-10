@@ -1,21 +1,36 @@
 import { createServer } from "node:http";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
-import { readFile, writeFile, mkdir, readdir, stat, unlink, rename, copyFile } from "node:fs/promises";
-import { createReadStream, existsSync } from "node:fs";
+import { readFile, writeFile, mkdir, readdir, stat, unlink } from "node:fs/promises";
+import { createReadStream, existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize, relative, resolve } from "node:path";
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 
-const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const moduleRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const root = resolve(process.env.PROJECT_ROOT || moduleRoot);
+
+function loadLocalEnvironment() {
+  const envFile = join(moduleRoot, ".env");
+  if (!existsSync(envFile)) return;
+  for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Z][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (!match || process.env[match[1]] !== undefined) continue;
+    process.env[match[1]] = match[2].replace(/^(["'])(.*)\1$/, "$2");
+  }
+}
+
+loadLocalEnvironment();
 const distDir = join(root, "dist");
 const publicDir = join(root, "public");
 const contentDir = join(root, "src", "content", "blog");
 const homeFile = join(root, "src", "data", "home.json");
 const siteFile = join(root, "src", "data", "site.json");
-const adminFile = join(root, "server", "admin.json");
 const uploadDir = join(publicDir, "images", "uploads");
 const sessions = new Map();
 const PORT = Number(process.env.PORT || 4321);
+const MAX_UPLOAD_SIZE = 8 * 1024 * 1024;
+const MAX_IMAGE_PIXELS = 40_000_000;
 const homeFieldsToRemove = [
   "siteTitle",
   "siteAuthor",
@@ -54,7 +69,58 @@ const mimeTypes = {
   ".ico": "image/x-icon"
 };
 
-const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"]);
+const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".webp"]);
+
+function getConfiguredAdmin() {
+  const username = process.env.ADMIN_USERNAME?.trim();
+  const values = process.env.ADMIN_PASSWORD_HASH?.split(":") ?? [];
+  const [salt, iterations, digest, hash] = values;
+  const iterationCount = Number(iterations);
+  if (!username || !salt || !Number.isSafeInteger(iterationCount) || iterationCount < 100_000 || !digest || !/^[a-f0-9]+$/i.test(hash || "")) {
+    return null;
+  }
+  return { username, salt, iterations: iterationCount, digest, hash };
+}
+
+function getImageDimensions(buffer, filename = "") {
+  const ext = extname(filename).toLowerCase();
+  if (ext === ".png" && buffer.readUInt32BE(0) === 0x89504e47) {
+    return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+  }
+  if ((ext === ".jpg" || ext === ".jpeg") && buffer[0] === 0xff && buffer[1] === 0xd8) {
+    let offset = 2;
+    while (offset < buffer.length) {
+      if (buffer[offset] !== 0xff) break;
+      const marker = buffer[offset + 1];
+      const length = buffer.readUInt16BE(offset + 2);
+      if (marker >= 0xc0 && marker <= 0xc3) {
+        return { height: buffer.readUInt16BE(offset + 5), width: buffer.readUInt16BE(offset + 7) };
+      }
+      offset += 2 + length;
+    }
+  }
+  if (ext === ".gif" && buffer.slice(0, 3).toString("ascii") === "GIF") {
+    return { width: buffer.readUInt16LE(6), height: buffer.readUInt16LE(8) };
+  }
+  if (ext === ".webp" && buffer.slice(0, 4).toString("ascii") === "RIFF" && buffer.slice(8, 12).toString("ascii") === "WEBP") {
+    const type = buffer.slice(12, 16).toString("ascii");
+    if (type === "VP8X") return { width: 1 + buffer.readUIntLE(24, 3), height: 1 + buffer.readUIntLE(27, 3) };
+    if (type === "VP8 " && buffer.length > 30) return { width: buffer.readUInt16LE(26) & 0x3fff, height: buffer.readUInt16LE(28) & 0x3fff };
+    if (type === "VP8L" && buffer.length > 25) {
+      const bits = buffer.readUInt32LE(21);
+      return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
+    }
+  }
+  if (ext === ".svg") {
+    const source = buffer.toString("utf8", 0, Math.min(buffer.length, 2048));
+    const width = Number(source.match(/\bwidth=["']?([0-9.]+)/i)?.[1]);
+    const height = Number(source.match(/\bheight=["']?([0-9.]+)/i)?.[1]);
+    if (width && height) return { width, height };
+    const viewBox = source.match(/\bviewBox=["'][^"']*?\s([0-9.]+)\s+([0-9.]+)["']/i);
+    if (viewBox) return { width: Number(viewBox[1]), height: Number(viewBox[2]) };
+  }
+  return {};
+}
 
 function send(res, status, body, type = "text/plain; charset=utf-8", headers = {}) {
   const payload = Buffer.isBuffer(body) ? body : Buffer.from(String(body));
@@ -222,12 +288,16 @@ function parseFrontmatter(source) {
 
 function toMarkdown(post) {
   const tags = normalizeTags(post.tags);
+  const coverWidth = Number(post.coverWidth);
+  const coverHeight = Number(post.coverHeight);
   return `---\n` +
     `title: ${escapeYaml(post.title)}\n` +
     `description: ${escapeYaml(post.description)}\n` +
     `pubDate: ${escapeYaml(post.pubDate)}\n` +
     `tags: ${JSON.stringify(tags)}\n` +
     `cover: ${escapeYaml(post.cover)}\n` +
+    (Number.isFinite(coverWidth) && coverWidth > 0 ? `coverWidth: ${Math.round(coverWidth)}\n` : "") +
+    (Number.isFinite(coverHeight) && coverHeight > 0 ? `coverHeight: ${Math.round(coverHeight)}\n` : "") +
     `draft: ${post.draft ? "true" : "false"}\n` +
     `---\n\n` +
     `${String(post.content || "").trim()}\n`;
@@ -323,8 +393,9 @@ async function listImages() {
       }
       if (!entry.isFile() || !imageExtensions.has(extname(entry.name).toLowerCase())) continue;
       const info = await stat(file);
+      const dimensions = getImageDimensions(await readFile(file), entry.name);
       const path = `/${relative(publicDir, file).split("\\").join("/")}`;
-      images.push({ path, name: entry.name, size: info.size });
+      images.push({ path, name: entry.name, size: info.size, ...dimensions });
     }
   }
 
@@ -374,19 +445,38 @@ async function saveUpload(req) {
   const { files } = parseMultipart(buffer, req.headers["content-type"] || "");
   const file = files.image;
   if (!file || !file.buffer.length) throw new Error("没有选择图片。");
-  if (!file.type.startsWith("image/")) throw new Error("只能上传图片文件。");
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type.toLowerCase())) throw new Error("仅支持 PNG、JPEG 或 WebP 图片。");
+  if (file.buffer.length > MAX_UPLOAD_SIZE) throw new Error("图片超过 8 MB，请先压缩后再上传。");
   await mkdir(uploadDir, { recursive: true });
-  const ext = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"].includes(extname(file.filename).toLowerCase())
-    ? extname(file.filename).toLowerCase()
-    : ".png";
+  const source = sharp(file.buffer, { limitInputPixels: MAX_IMAGE_PIXELS, failOn: "error" }).rotate();
+  const metadata = await source.metadata();
+  if (!metadata.width || !metadata.height) throw new Error("无法读取图片尺寸。");
+  const optimized = await source
+    .resize({ width: 1920, withoutEnlargement: true })
+    .webp({ quality: 82, effort: 6 })
+    .toBuffer();
   const base = safeSlug(file.filename.replace(/\.[^.]+$/, "")) || "image";
-  const name = `${Date.now()}-${base}${ext}`;
-  await writeFile(join(uploadDir, name), file.buffer);
-  return `/images/uploads/${name}`;
+  const name = `${Date.now()}-${base}.webp`;
+  await writeFile(join(uploadDir, name), optimized);
+  const dimensions = getImageDimensions(optimized, name);
+  const variantBase = name.replace(/\.webp$/i, "");
+  await Promise.all(
+    [640, 960]
+      .filter((width) => width < (dimensions.width ?? 0))
+      .map(async (width) => {
+        const variant = await sharp(optimized).resize({ width, withoutEnlargement: true }).webp({ quality: 82, effort: 6 }).toBuffer();
+        await writeFile(join(uploadDir, `${variantBase}-${width}.webp`), variant);
+      })
+  );
+  return {
+    path: `/images/uploads/${name}`,
+    size: optimized.length,
+    ...dimensions
+  };
 }
 
 async function rebuildSite() {
-  const astroEntry = join(root, "node_modules", "astro", "astro.js");
+  const astroEntry = join(moduleRoot, "node_modules", "astro", "astro.js");
   const env = {
     ...process.env,
     ASTRO_TELEMETRY_DISABLED: "1",
@@ -408,7 +498,11 @@ function verifyPassword(password, admin) {
 
 async function handleLogin(req, res) {
   const { username, password } = await readJsonBody(req);
-  const admin = await readJson(adminFile);
+  const admin = getConfiguredAdmin();
+  if (!admin) {
+    json(res, 503, { error: "后台尚未配置管理员凭据。" });
+    return;
+  }
   if (username !== admin.username || !verifyPassword(password || "", admin)) {
     json(res, 401, { error: "账号或密码不正确。" });
     return;
@@ -444,7 +538,7 @@ async function serveFile(res, requestedPath) {
 }
 
 function adminLoginPage() {
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>后台登录</title><link rel="stylesheet" href="/admin/admin.css"></head><body class="admin-auth"><main class="login-panel"><p class="eyebrow">Admin</p><h1>登录博客后台</h1><p>此后台只有预设管理员账号，没有注册入口。</p><form id="login-form"><label>账号<input name="username" autocomplete="username" required value="admin"></label><label>密码<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">登录</button><output id="login-message"></output></form></main><script>document.querySelector("#login-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);const r=await fetch("/api/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(f))});if(r.ok) location.href="/admin/"; else document.querySelector("#login-message").textContent=(await r.json()).error||"登录失败";});</script></body></html>`;
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>后台登录</title><link rel="stylesheet" href="/admin/admin.css"></head><body class="admin-auth"><main class="login-panel"><p class="eyebrow">Admin</p><h1>登录博客后台</h1><p>此后台只有预设管理员账号，没有注册入口。</p><form id="login-form"><label>账号<input name="username" autocomplete="username" required></label><label>密码<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">登录</button><output id="login-message"></output></form></main><script>document.querySelector("#login-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);const r=await fetch("/api/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(f))});if(r.ok) location.href="/admin/"; else document.querySelector("#login-message").textContent=(await r.json()).error||"登录失败";});</script></body></html>`;
 }
 
 async function route(req, res) {
@@ -520,7 +614,7 @@ async function route(req, res) {
         await rebuildSite();
         return json(res, ok ? 200 : 404, ok ? { ok: true } : { error: "文章不存在。" });
       }
-      if (url.pathname === "/api/upload" && req.method === "POST") return json(res, 201, { path: await saveUpload(req) });
+      if (url.pathname === "/api/upload" && req.method === "POST") return json(res, 201, await saveUpload(req));
       if (url.pathname === "/api/rebuild" && req.method === "POST") {
         await rebuildSite();
         return json(res, 200, { ok: true });
@@ -531,7 +625,8 @@ async function route(req, res) {
     if (await serveFile(res, req.url)) return;
     send(res, 404, "页面不存在。");
   } catch (error) {
-    json(res, 500, { error: error.message || "服务器错误。" });
+    console.error(error);
+    json(res, 500, { error: "服务器处理请求时发生错误。" });
   }
 }
 

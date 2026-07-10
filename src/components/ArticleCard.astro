@@ -1,5 +1,6 @@
 ---
 import { formatDate, getReadingMinutes } from "../lib/content";
+import ResponsiveImage from "./ResponsiveImage.astro";
 import homeContent from "../data/home.json";
 
 interface Props {
@@ -10,11 +11,13 @@ interface Props {
   tags?: string[];
   category?: string;
   cover?: string;
+  coverWidth?: number;
+  coverHeight?: number;
   body?: string;
   featured?: boolean;
 }
 
-const { href, title, description = "", pubDate, tags = [], category, cover, body = "", featured = false } = Astro.props;
+const { href, title, description = "", pubDate, tags = [], category, featured = false, cover, coverWidth = featured ? 1280 : 720, coverHeight = featured ? 840 : 450, body = "" } = Astro.props;
 const replaceTemplate = (template: string, values: Record<string, string | number>) =>
   Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, String(value)), template);
 const readAriaLabel = replaceTemplate(homeContent.articleReadAriaTemplate ?? "阅读《{title}》", { title });
@@ -26,14 +29,14 @@ const readingTemplate = homeContent.readingMinutesTemplate ?? "{minutes} 分钟�
   {
     cover && (
       <a class="article-media" href={href} aria-label={readAriaLabel}>
-        <img
+        <ResponsiveImage
           src={cover}
           alt=""
-          width={featured ? 1280 : 720}
-          height={featured ? 840 : 450}
+          width={coverWidth}
+          height={coverHeight}
           loading={featured ? "eager" : "lazy"}
-          decoding="async"
           fetchpriority={featured ? "high" : "auto"}
+          sizes={featured ? "(max-width: 860px) 100vw, 1080px" : "(max-width: 860px) 100vw, 50vw"}
         />
       </a>
     )

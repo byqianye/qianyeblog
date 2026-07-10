@@ -44,6 +44,8 @@ const tagPage = {
           tags={post.data.tags}
           category={post.data.category}
           cover={post.data.cover}
+          coverWidth={post.data.coverWidth}
+          coverHeight={post.data.coverHeight}
           body={post.body}
         />
       )) : <EmptyState title="这个标签下暂无文章" description="可以回到标签页看看其他主题。" actionHref="/tags" actionLabel="查看标签" />
