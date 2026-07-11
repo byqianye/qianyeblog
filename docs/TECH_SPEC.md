@@ -1,4 +1,4 @@
-# Swiss Digital Garden Technical Specification
+# Interactive Digital Garden Technical Specification
 
 ## Modules
 
@@ -12,7 +12,11 @@
 
 ### Presentation
 
-`src/styles/global.css` contains tokens, reset, document primitives, and shared layout utilities. Astro components own their local styles. No automatic dark theme is maintained.
+`src/styles/global.css` contains the retro-futuristic tokens, reset, document primitives, and shared layout utilities. Astro components own their local styles. No automatic theme switching is maintained.
+
+### Canvas visual system
+
+`src/components/ParticleField.astro` owns a fixed, decorative Canvas layer. It adapts the orbital depth and pointer response of the reference `nebula.html` page without copying its source. It uses a bounded particle count, capped device pixel ratio, pointer-proximity link emphasis, Page Visibility suspension, resize reconstruction, and a one-frame reduced-motion fallback. It has no network or package dependency and never receives content or user input.
 
 ## Build
 

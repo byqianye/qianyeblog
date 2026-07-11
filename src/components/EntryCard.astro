@@ -2,18 +2,45 @@
 import type { GardenEntry } from "../lib/garden";
 import { formatDate, kindLabels } from "../lib/garden";
 import MediaPicture from "./MediaPicture.astro";
+
 interface Props { entry: GardenEntry; index?: number; variant?: "featured" | "list" | "compact"; }
 const { entry, index = 0, variant = "list" } = Astro.props;
 const href = `/blog/${entry.id}`;
 const dateParts = entry.data.pubDate.toISOString().slice(0, 10).split("-");
 ---
+
 <article class:list={["entry", `entry--${variant}`]} data-kind={entry.data.kind} data-tags={JSON.stringify(entry.data.tags)}>
   <div class="entry-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</div>
   {entry.data.cover && variant === "featured" && <a class="entry-media" href={href} tabindex="-1" aria-hidden="true"><MediaPicture src={entry.data.cover} alt="" loading="eager" fetchpriority="high" sizes="(max-width: 720px) 100vw, 70vw" /></a>}
-  <div class="entry-copy"><div class="entry-meta"><span>{kindLabels[entry.data.kind]}</span><time datetime={entry.data.pubDate.toISOString()}>{formatDate(entry.data.pubDate, true)}</time></div><h2><a href={href}>{entry.data.title}</a></h2><p>{entry.data.description}</p><div class="entry-footer"><div class="entry-tags">{entry.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>)}</div>{entry.data.kind === "resource" && entry.data.externalUrl && <a class="external" href={entry.data.externalUrl} target="_blank" rel="noreferrer">访问资源 ↗</a>}</div></div>
+  <div class="entry-copy">
+    <div class="entry-meta"><span>{kindLabels[entry.data.kind]}</span><time datetime={entry.data.pubDate.toISOString()}>{formatDate(entry.data.pubDate, true)}</time></div>
+    <h2><a href={href}>{entry.data.title}</a></h2>
+    <p>{entry.data.description}</p>
+    <div class="entry-footer">
+      <div class="entry-tags">{entry.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>)}</div>
+      {entry.data.kind === "resource" && entry.data.externalUrl && <a class="external" href={entry.data.externalUrl} target="_blank" rel="noreferrer">访问资源（新窗口）</a>}
+    </div>
+  </div>
   <div class="entry-date" aria-hidden="true"><b>{dateParts[2]}</b><span>{dateParts[1]}.{dateParts[0]}</span></div>
 </article>
+
 <style>
-.entry{display:grid;grid-template-columns:4rem minmax(0,1fr) 7rem;border-top:1px solid var(--line);position:relative}.entry-index{padding-top:1rem;font:600 .72rem/1 var(--sans);color:var(--muted)}.entry-copy{padding:1rem 1.5rem 1.5rem;border-left:1px solid var(--line)}.entry-meta{display:flex;gap:1rem;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em}.entry h2{margin:.7rem 0 .5rem;font-size:clamp(1.35rem,2.8vw,2.6rem);line-height:1.02;letter-spacing:-.045em}.entry h2 a{text-decoration:none}.entry p{max-width:48rem;margin:0;color:var(--muted)}.entry-footer{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-top:1.4rem}.entry-tags{display:flex;gap:.7rem;flex-wrap:wrap}.entry-tags a,.external{font-size:.76rem}.external{color:var(--accent);font-weight:700}.entry-date{border-left:1px solid var(--line);padding:1rem 0 0 1rem}.entry-date b{display:block;color:var(--accent);font-size:3.75rem;line-height:.78;letter-spacing:-.08em}.entry-date span{font-size:.7rem;color:var(--muted)}.entry--featured{grid-template-columns:4rem minmax(0,1.6fr) minmax(10rem,.4fr);grid-template-areas:"index media date" "index copy date"}.entry--featured .entry-index{grid-area:index}.entry--featured .entry-media{grid-area:media;border-left:1px solid var(--line);aspect-ratio:16/9;overflow:hidden}.entry-media :global(img){width:100%;height:100%;object-fit:cover}.entry--featured .entry-copy{grid-area:copy}.entry--featured .entry-date{grid-area:date}.entry--compact p,.entry--compact .entry-footer{display:none}
-@media(max-width:720px){.entry,.entry--featured{grid-template-columns:2.5rem minmax(0,1fr);grid-template-areas:"index copy" "media media"}.entry-date{display:none}.entry--featured .entry-index{grid-area:index}.entry--featured .entry-copy{grid-area:copy}.entry--featured .entry-media{grid-area:media;border-left:0;border-top:1px solid var(--line)}.entry-copy{padding:1rem}.entry-footer{align-items:flex-start;flex-direction:column}.entry h2{font-size:1.7rem}}
+  .entry { position: relative; display: grid; grid-template-columns: 4rem minmax(0, 1fr) 7rem; overflow: hidden; border-top: 1px solid var(--line); background: var(--panel-deep); transition: background-color .22s ease; }
+  .entry::before { content: ""; position: absolute; z-index: 3; top: 0; left: 0; width: 100%; height: 1px; background: var(--accent); box-shadow: 0 0 14px rgba(0, 255, 255, .8); transform: scaleX(0); transform-origin: left; transition: transform .35s ease; }
+  .entry:hover { background: var(--panel-hover); }.entry:hover::before { transform: scaleX(1); }
+  .entry-index { padding-top: 1rem; color: var(--accent); font: 600 .72rem/1 var(--sans); text-align: center; text-shadow: 0 0 10px rgba(0, 255, 255, .45); }
+  .entry-copy { min-width: 0; padding: 1rem 1.5rem 1.5rem; border-left: 1px solid var(--line); }
+  .entry-meta { display: flex; gap: 1rem; color: var(--muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+  .entry h2 { margin: .7rem 0 .5rem; overflow-wrap: anywhere; font-size: clamp(1.35rem, 2.8vw, 2.6rem); line-height: 1.05; letter-spacing: -.045em; }
+  .entry h2 a { text-decoration: none; }.entry p { max-width: 48rem; margin: 0; color: var(--copy); }
+  .entry-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-top: 1.4rem; }
+  .entry-tags { display: flex; flex-wrap: wrap; gap: .7rem; }.entry-tags a { display: inline-flex; min-height: 40px; align-items: center; color: var(--muted); font-size: .76rem; }
+  .external { display: inline-flex; min-height: 40px; align-items: center; padding: .4rem .55rem; border: 1px solid var(--signal); color: #ff7cae; font-size: .72rem; font-weight: 700; text-decoration: none; }.external:hover { background: var(--signal); color: var(--paper); text-shadow: none; }
+  .entry-date { padding: 1rem 0 0 1rem; border-left: 1px solid var(--line); }.entry-date b { display: block; color: var(--signal); font-size: 3.75rem; line-height: .78; letter-spacing: -.08em; text-shadow: 0 0 18px rgba(255, 0, 110, .34); }.entry-date span { color: var(--muted); font-size: .7rem; }
+  .entry--featured { grid-template-columns: 4rem minmax(0, 1.6fr) minmax(10rem, .4fr); grid-template-areas: "index media date" "index copy date"; }.entry--featured .entry-index { grid-area: index; }.entry--featured .entry-media { position: relative; grid-area: media; aspect-ratio: 16 / 9; overflow: hidden; border-left: 1px solid var(--line); }.entry--featured .entry-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, rgba(0, 255, 255, .13)); pointer-events: none; }.entry-media :global(img) { width: 100%; height: 100%; object-fit: cover; filter: saturate(.8) contrast(1.06) brightness(.82); transition: transform .6s ease, filter .6s ease; }.entry:hover .entry-media :global(img) { transform: scale(1.025); filter: saturate(1) contrast(1.06) brightness(.92); }
+  .entry--featured .entry-copy { grid-area: copy; }.entry--featured .entry-date { grid-area: date; }.entry--compact p, .entry--compact .entry-footer { display: none; }
+  @media (max-width: 720px) {
+    .entry, .entry--featured { grid-template-columns: 2.5rem minmax(0, 1fr); grid-template-areas: "index copy" "media media"; }.entry-date { display: none; }.entry--featured .entry-index { grid-area: index; }.entry--featured .entry-copy { grid-area: copy; }.entry--featured .entry-media { grid-area: media; border-top: 1px solid var(--line); border-left: 0; }.entry-copy { padding: 1rem; }.entry-footer { align-items: flex-start; flex-direction: column; }.entry h2 { font-size: 1.65rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .entry, .entry::before, .entry-media :global(img) { transition: none; } }
 </style>

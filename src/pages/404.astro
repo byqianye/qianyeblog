@@ -1,5 +1,17 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-<BaseLayout title="页面未找到" description="请求的页面不存在。"><section class="not-found"><b aria-hidden="true">404</b><div><p class="kicker">路径未找到</p><h1>这条路径<br />还没有内容。</h1><p>链接可能已经改变，或者这块内容仍在整理。</p><a class="button-link" href="/blog">返回花园</a></div></section></BaseLayout>
-<style>.not-found{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 192px)}.not-found>b{overflow:hidden;color:var(--accent);font-size:clamp(8rem,25vw,24rem);line-height:.75;letter-spacing:-.12em}.not-found>div{display:flex;flex-direction:column;justify-content:center;padding:2rem;border-left:1px solid var(--line)}.not-found h1{font-size:clamp(3rem,7vw,7rem);line-height:.9;letter-spacing:-.07em}@media(max-width:700px){.not-found{grid-template-columns:1fr}.not-found>b{font-size:10rem}.not-found>div{border-left:0;border-top:1px solid var(--line)}}</style>
+
+<BaseLayout title="页面未找到" description="请求的页面不存在。">
+  <section class="not-found">
+    <b aria-hidden="true">404</b>
+    <div><p class="kicker">路径未找到</p><h1>这条路径<br />还没有内容。</h1><p>链接可能已经改变，或者这块内容仍在整理。</p><a class="button-link" href="/blog">返回花园</a></div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100svh - 192px); overflow: hidden; background: var(--panel-overlay); }
+  .not-found > b { overflow: hidden; color: var(--signal); font-size: clamp(8rem, 25vw, 24rem); line-height: .75; letter-spacing: -.12em; text-shadow: 0 0 36px rgba(255, 0, 110, .25); }
+  .not-found > div { display: flex; flex-direction: column; justify-content: center; padding: 2rem; border-left: 1px solid var(--line); }.not-found h1 { font-size: clamp(3rem, 7vw, 7rem); line-height: .92; letter-spacing: -.07em; text-shadow: 3px 0 rgba(0, 255, 255, .34); }.not-found p { max-width: 32rem; color: var(--copy); }.not-found .button-link { align-self: flex-start; }
+  @media (max-width: 700px) { .not-found { grid-template-columns: 1fr; }.not-found > b { font-size: 10rem; }.not-found > div { border-top: 1px solid var(--line); border-left: 0; } }
+</style>

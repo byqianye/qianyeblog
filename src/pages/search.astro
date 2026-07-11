@@ -1,9 +1,62 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-<BaseLayout title="搜索" description="搜索浅靥数字花园中的标题、摘要、标签和正文。"><header class="page-head"><div><p class="kicker">站内搜索 / 05</p><h1>搜索</h1></div><div><p>输入标题、标签或正文中的关键词。搜索只在浏览器本地完成，不会上传查询内容。</p></div></header><section class="search-box"><label for="search">关键词</label><input id="search" type="search" autocomplete="off" placeholder="例如：工具、浏览器、影视"/><p class="status" aria-live="polite">正在载入索引…</p></section><section class="results"></section>
-<script is:inline>
-const input=document.querySelector('#search'),status=document.querySelector('.status'),results=document.querySelector('.results');let entries=[];const kindLabels={article:'文章',note:'笔记',resource:'资源'};const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-function render(){const q=input.value.trim().toLowerCase(),terms=q.split(/\s+/).filter(Boolean),matches=entries.filter(e=>terms.every(t=>[e.title,e.description,e.kind,e.tags.join(' '),e.body].join(' ').toLowerCase().includes(t)));status.textContent=q?`找到 ${matches.length} 条内容`:`索引包含 ${entries.length} 条内容`;results.innerHTML=(q?matches:entries).map((e,i)=>`<article><b>${String(i+1).padStart(2,'0')}</b><div><span>${esc(kindLabels[e.kind]||e.kind)} / ${esc(e.pubDate.slice(0,10))}</span><h2><a href="${esc(e.url)}">${esc(e.title)}</a></h2><p>${esc(e.description)}</p></div></article>`).join('')||'<p class="empty">没有匹配内容，试试更短的关键词。</p>';}fetch('/search.json').then(r=>r.json()).then(data=>{entries=data;input.addEventListener('input',render);render()}).catch(()=>status.textContent='索引载入失败，请稍后重试。');
-</script></BaseLayout>
-<style>.search-box{padding:2rem 1.5rem;border-bottom:1px solid var(--line)}.search-box label{display:block;font-size:.72rem;color:var(--accent);text-transform:uppercase}.search-box input{width:100%;border:0;border-bottom:2px solid var(--ink);padding:1rem 0;background:transparent;font-size:clamp(1.5rem,4vw,3rem)}.status{font-size:.75rem;color:var(--muted)}.results article{display:grid;grid-template-columns:4rem 1fr;border-bottom:1px solid var(--line)}.results article>b{padding:1.5rem;color:var(--accent)}.results article>div{padding:1.5rem;border-left:1px solid var(--line)}.results span{font-size:.7rem;color:var(--muted)}.results h2{margin:.3rem 0;font-size:clamp(1.4rem,3vw,2.5rem);letter-spacing:-.04em}.results h2 a{text-decoration:none}.results p{margin:0;color:var(--muted)}</style>
+
+<BaseLayout title="搜索" description="搜索浅靥数字花园中的标题、摘要、标签和正文。">
+  <header class="page-head"><div><p class="kicker">站内搜索 / 05</p><h1>搜索</h1></div><div><p>输入标题、标签或正文中的关键词。搜索只在浏览器本地完成，不会上传查询内容。</p></div></header>
+  <section class="search-box"><label for="search">关键词</label><input id="search" type="search" autocomplete="off" placeholder="例如：工具、浏览器、影视" /><p class="status" aria-live="polite">正在载入索引…</p></section>
+  <section class="results" aria-label="搜索结果"></section>
+
+  <script>
+    interface SearchEntry {
+      title: string;
+      description: string;
+      url: string;
+      pubDate: string;
+      kind: "article" | "note" | "resource";
+      tags: string[];
+      body: string;
+    }
+
+    const isSearchEntry = (value: unknown): value is SearchEntry => {
+      if (!value || typeof value !== "object") return false;
+      const entry = value as Record<string, unknown>;
+      return typeof entry.title === "string" && typeof entry.description === "string" && typeof entry.url === "string" &&
+        typeof entry.pubDate === "string" && ["article", "note", "resource"].includes(String(entry.kind)) &&
+        Array.isArray(entry.tags) && entry.tags.every((tag) => typeof tag === "string") && typeof entry.body === "string";
+    };
+
+    const input = document.querySelector<HTMLInputElement>("#search");
+    const status = document.querySelector<HTMLElement>(".status");
+    const results = document.querySelector<HTMLElement>(".results");
+    const kindLabels: Record<SearchEntry["kind"], string> = { article: "文章", note: "笔记", resource: "资源" };
+
+    if (input && status && results) {
+      let entries: SearchEntry[] = [];
+      const escapeHtml = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+
+      const render = () => {
+        const query = input.value.trim().toLowerCase();
+        const terms = query.split(/\s+/).filter(Boolean);
+        const matches = entries.filter((entry) => terms.every((term) => [entry.title, entry.description, entry.kind, entry.tags.join(" "), entry.body].join(" ").toLowerCase().includes(term)));
+        const visibleEntries = query ? matches : entries;
+        status.textContent = query ? `找到 ${matches.length} 条内容` : `索引包含 ${entries.length} 条内容`;
+        results.innerHTML = visibleEntries.map((entry, index) => `<article><b>${String(index + 1).padStart(2, "0")}</b><div><span>${escapeHtml(kindLabels[entry.kind])} / ${escapeHtml(entry.pubDate.slice(0, 10))}</span><h2><a href="${escapeHtml(entry.url)}">${escapeHtml(entry.title)}</a></h2><p>${escapeHtml(entry.description)}</p></div></article>`).join("") || '<p class="empty">没有匹配内容，试试更短的关键词。</p>';
+      };
+
+      fetch("/search.json").then(async (response) => {
+        if (!response.ok) throw new Error("Search index request failed.");
+        const data: unknown = await response.json();
+        entries = Array.isArray(data) ? data.filter(isSearchEntry) : [];
+        input.addEventListener("input", render);
+        render();
+      }).catch(() => { status.textContent = "索引载入失败，请稍后重试。"; });
+    }
+  </script>
+</BaseLayout>
+
+<style>
+  .search-box { padding: 2rem 1.5rem; border-bottom: 1px solid var(--line); background: var(--panel-deep); }.search-box label { display: block; color: var(--accent); font-size: .72rem; letter-spacing: .1em; }.search-box input { width: 100%; padding: 1rem 0; border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; background: transparent; color: var(--ink); caret-color: var(--signal); font-size: clamp(1.5rem, 4vw, 3rem); }.search-box input::placeholder { color: var(--muted); }.status { color: var(--muted); font-size: .75rem; }
+  .results { background: var(--panel-overlay); }.results article { position: relative; display: grid; grid-template-columns: 4rem 1fr; border-bottom: 1px solid var(--line); transition: background-color .2s ease; }.results article:hover { background: var(--panel-hover); }.results article > b { padding: 1.5rem; color: var(--signal); text-shadow: 0 0 12px rgba(255, 0, 110, .35); }.results article > div { min-width: 0; padding: 1.5rem; border-left: 1px solid var(--line); }.results span { color: var(--muted); font-size: .7rem; }.results h2 { margin: .3rem 0; overflow-wrap: anywhere; font-size: clamp(1.4rem, 3vw, 2.5rem); letter-spacing: -.04em; }.results h2 a { text-decoration: none; }.results p { margin: 0; color: var(--copy); }
+  @media (max-width: 600px) { .search-box { padding: 1.5rem 1rem; }.results article { grid-template-columns: 2.5rem 1fr; }.results article > b, .results article > div { padding: 1rem; } }
+</style>

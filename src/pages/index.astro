@@ -1,30 +1,99 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import EntryCard from "../components/EntryCard.astro";
-import { getGardenEntries, getGardenTags, kindLabels, type GardenKind } from "../lib/garden";
+import { formatDate, getGardenEntries, getGardenTags, kindLabels, type GardenKind } from "../lib/garden";
 import home from "../data/home.json";
+
 const entries = await getGardenEntries();
 const tags = await getGardenTags();
 const featured = entries.find((entry) => entry.data.featured) ?? entries[0];
 const recent = entries.filter((entry) => entry.id !== featured?.id).slice(0, 4);
 const kinds = Object.entries(kindLabels) as [GardenKind, string][];
+const latestDate = entries[0]?.data.pubDate;
 ---
+
 <BaseLayout>
-  <section class="home-hero">
-    <div class="hero-number" aria-hidden="true">01</div>
-    <div class="hero-copy"><p class="kicker">{home.kicker}</p><h1>{home.title}</h1></div>
-    <div class="hero-note"><p>{home.description}</p><a href="/blog">进入花园 →</a></div>
+  <section class="cosmic-hero">
+    <div class="hero-copy">
+      <p class="kicker">{home.kicker}</p>
+      <h1>{home.title}</h1>
+      <p>{home.description}</p>
+      <div class="hero-actions">
+        <a class="primary-action" href="/blog">进入花园</a>
+        <a href="/about">了解这里</a>
+      </div>
+    </div>
+
+    <div class="garden-map" aria-label="花园内容概览">
+      <div class="orbit orbit-one" aria-hidden="true"></div>
+      <div class="orbit orbit-two" aria-hidden="true"></div>
+      <div class="map-core"><strong>浅靥</strong><span>数字花园</span></div>
+      {
+        kinds.map(([kind, label], index) => (
+          <a class={`map-node node-${index + 1}`} href={`/blog?kind=${kind}`}>
+            <span>{label}</span>
+            <b>{String(entries.filter((entry) => entry.data.kind === kind).length).padStart(2, "0")}</b>
+          </a>
+        ))
+      }
+    </div>
+
+    <dl class="hero-metrics">
+      <div><dt>公开记录</dt><dd>{String(entries.length).padStart(2, "0")}</dd></div>
+      <div><dt>主题标签</dt><dd>{String(tags.length).padStart(2, "0")}</dd></div>
+      <div><dt>最近更新</dt><dd>{latestDate ? formatDate(latestDate, true) : "暂无"}</dd></div>
+    </dl>
   </section>
+
   {featured && <><div class="section-label"><span>精选内容</span><span>01</span></div><EntryCard entry={featured} variant="featured" /></>}
-  <div class="section-label"><span>最近整理</span><a href="/archive">查看归档 →</a></div>
-  <section>{recent.map((entry, index) => <EntryCard entry={entry} index={index + 1} />)}</section>
-  <section class="home-index">
-    <div><p class="kicker">内容类型</p><h2>三种尺度，<br />同一座花园。</h2></div>
-    <div class="kind-links">{kinds.map(([kind,label],index) => <a href={`/blog?kind=${kind}`}><b>0{index+1}</b><span>{label}</span><small>{entries.filter((entry) => entry.data.kind === kind).length} 条</small></a>)}</div>
+
+  <div class="section-label"><span>最近整理</span><a href="/archive">查看归档</a></div>
+  <section class="recent-list">{recent.map((entry, index) => <EntryCard entry={entry} index={index + 1} />)}</section>
+
+  <section class="garden-statement">
+    <div><p class="kicker">关于这座花园</p><h2>{home.aboutTitle}</h2></div>
+    <div><p>{home.aboutBody}</p><a href="/about">阅读更多</a></div>
   </section>
-  <section class="tag-index"><p class="kicker">主题标签</p><div>{tags.map(({tag,count}) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}<sup>{count}</sup></a>)}</div></section>
+
+  <section class="tag-index">
+    <p class="kicker">主题标签</p>
+    <div>{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}`}>{tag}<sup>{String(count).padStart(2, "0")}</sup></a>)}</div>
+  </section>
 </BaseLayout>
+
 <style>
-  .home-hero{display:grid;grid-template-columns:1fr 2fr 1fr;min-height:620px;border-bottom:1px solid var(--line)}.home-hero>div{padding:1.5rem}.hero-number{font-size:clamp(7rem,18vw,17rem);font-weight:800;line-height:.75;letter-spacing:-.1em;color:var(--accent);overflow:hidden}.hero-copy{border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}.hero-copy h1{margin:0;max-width:13ch;font-size:clamp(3rem,6vw,6.5rem);line-height:.95;letter-spacing:-.065em}.hero-note{border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:flex-end;gap:2rem}.hero-note p{font-size:1.1rem}.hero-note a{font-weight:700}.home-index{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}.home-index>div{padding:4rem 1.5rem}.home-index>div+div{border-left:1px solid var(--line)}.home-index h2{font-size:clamp(2.5rem,5vw,5.5rem);line-height:.92;letter-spacing:-.06em}.kind-links a{display:grid;grid-template-columns:3rem 1fr auto;gap:1rem;padding:1.2rem 0;border-top:1px solid var(--line);text-decoration:none}.kind-links b{color:var(--accent)}.kind-links small{color:var(--muted)}.tag-index{padding:4rem 1.5rem;border-top:1px solid var(--line)}.tag-index>div{display:flex;flex-wrap:wrap;gap:.25rem 1.2rem}.tag-index a{font-size:clamp(1.4rem,3vw,3.5rem);font-weight:700;letter-spacing:-.04em;text-decoration:none}.tag-index sup{margin-left:.25rem;color:var(--accent);font-size:.65rem}
-  @media(max-width:800px){.home-hero{grid-template-columns:1fr 1fr;min-height:520px}.hero-number{font-size:7rem}.hero-copy{border-left:1px solid var(--line)}.hero-copy h1{font-size:2.7rem}.hero-note{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);padding:1rem}.home-index{grid-template-columns:1fr}.home-index>div{padding:2.5rem 1rem}.home-index>div+div{border-left:0;border-top:1px solid var(--line)}}
+  .cosmic-hero { position: relative; min-height: min(820px, calc(100vh - 82px)); display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(26rem, .95fr); grid-template-rows: 1fr auto; overflow: hidden; border-bottom: 1px solid var(--line-strong); background: rgba(2, 3, 11, .38); }
+  .cosmic-hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(2, 3, 11, .9) 0%, rgba(2, 3, 11, .54) 48%, rgba(2, 3, 11, .16)); }
+  .hero-copy { position: relative; z-index: 2; align-self: center; padding: clamp(3rem, 7vw, 7rem) clamp(1.25rem, 5vw, 5rem); }
+  .hero-copy h1 { max-width: 11ch; margin: 0; font-size: clamp(3rem, 6.8vw, 7rem); line-height: .98; letter-spacing: -.075em; text-wrap: balance; text-shadow: 3px 0 rgba(255, 0, 110, .52), -2px 0 rgba(0, 255, 255, .45); }
+  .hero-copy > p:not(.kicker) { max-width: 42rem; margin: 2rem 0 0; color: #b9cdd2; font-size: clamp(1rem, 1.5vw, 1.2rem); }
+  .hero-actions { display: flex; align-items: center; gap: 1.5rem; margin-top: 2.4rem; }
+  .hero-actions a { display: inline-flex; min-height: 44px; align-items: center; font-size: .82rem; font-weight: 700; }
+  .primary-action { padding: .8rem 1rem; border: 1px solid var(--accent); background: var(--accent); color: var(--paper); text-decoration: none; box-shadow: 0 0 28px rgba(0, 255, 255, .2); }
+  .primary-action:hover { background: transparent; color: var(--accent); }
+  .garden-map { position: relative; z-index: 2; align-self: center; justify-self: center; width: min(38vw, 500px); aspect-ratio: 1; }
+  .orbit { position: absolute; border: 1px solid rgba(0, 255, 255, .22); border-radius: 50%; box-shadow: 0 0 38px rgba(0, 255, 255, .04), inset 0 0 38px rgba(0, 255, 255, .03); }
+  .orbit::before, .orbit::after { content: ""; position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .orbit::before { top: 18%; right: 10%; }.orbit::after { bottom: 8%; left: 24%; background: var(--signal); box-shadow: 0 0 12px var(--signal); }
+  .orbit-one { inset: 8%; animation: orbit-spin 28s linear infinite; }.orbit-two { inset: 25%; border-color: rgba(255, 0, 110, .27); animation: orbit-spin 18s linear infinite reverse; }
+  .map-core { position: absolute; inset: 38%; display: grid; place-content: center; border: 1px solid var(--line-strong); background: #02030b; text-align: center; box-shadow: 0 0 34px rgba(0, 255, 255, .12); transform: rotate(45deg); }
+  .map-core > * { transform: rotate(-45deg); }.map-core strong { color: var(--accent); font-size: 1.2rem; }.map-core span { color: var(--muted); font-size: .58rem; }
+  .map-node { position: absolute; z-index: 2; display: grid; min-width: 88px; min-height: 48px; padding: .6rem .7rem; border: 1px solid var(--line-strong); background: rgba(2, 3, 11, .92); text-decoration: none; box-shadow: 0 0 20px rgba(0, 255, 255, .08); }
+  .map-node span { color: var(--muted); font-size: .65rem; }.map-node b { color: var(--accent); font-size: 1.35rem; line-height: 1; }.node-1 { top: 4%; left: 12%; }.node-2 { top: 40%; right: 0; }.node-3 { bottom: 2%; left: 16%; }
+  .hero-metrics { position: relative; z-index: 2; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; border-top: 1px solid var(--line); background: rgba(2, 3, 11, .78); }
+  .hero-metrics div { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 72px; padding: 1rem 1.5rem; }.hero-metrics div + div { border-left: 1px solid var(--line); }
+  .hero-metrics dt { color: var(--muted); font-size: .7rem; }.hero-metrics dd { margin: 0; color: var(--accent); font-size: 1rem; font-weight: 700; }
+  .garden-statement { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line-strong); background: var(--panel); }
+  .garden-statement > div { padding: clamp(2.5rem, 6vw, 6rem) 1.5rem; }.garden-statement > div + div { border-left: 1px solid var(--line); }
+  .garden-statement h2 { max-width: 12ch; margin: 0; font-size: clamp(2.5rem, 5vw, 5.5rem); line-height: .96; letter-spacing: -.06em; }.garden-statement p { max-width: 38rem; color: var(--copy-strong); font-size: 1.1rem; }.garden-statement a { display: inline-flex; min-height: 44px; align-items: center; color: var(--accent); font-weight: 700; }
+  .tag-index { padding: clamp(3rem, 7vw, 6rem) 1.5rem; border-top: 1px solid var(--line-strong); background: rgba(2, 3, 11, .9); }
+  .tag-index > div { display: flex; flex-wrap: wrap; gap: .25rem 1.2rem; }.tag-index a { font-size: clamp(1.4rem, 3vw, 3.5rem); font-weight: 700; letter-spacing: -.04em; text-decoration: none; }.tag-index sup { margin-left: .25rem; color: var(--signal); font-size: .65rem; }
+  @keyframes orbit-spin { to { transform: rotate(360deg); } }
+  @media (max-width: 800px) {
+    .cosmic-hero { min-height: 0; grid-template-columns: 1fr; grid-template-rows: auto auto auto; }.cosmic-hero::before { background: linear-gradient(180deg, rgba(2, 3, 11, .84), rgba(2, 3, 11, .38)); }
+    .hero-copy { padding: 4rem 1rem 2rem; }.hero-copy h1 { font-size: clamp(2.7rem, 13vw, 4.7rem); }.garden-map { width: min(88vw, 390px); margin: 0 auto 2rem; }
+    .hero-metrics { grid-column: 1; grid-template-columns: 1fr; }.hero-metrics div { min-height: 54px; }.hero-metrics div + div { border-top: 1px solid var(--line); border-left: 0; }
+    .garden-statement { grid-template-columns: 1fr; }.garden-statement > div { padding: 2.5rem 1rem; }.garden-statement > div + div { border-top: 1px solid var(--line); border-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .orbit { animation: none; } }
 </style>

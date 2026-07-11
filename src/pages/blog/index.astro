@@ -2,23 +2,45 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import EntryCard from "../../components/EntryCard.astro";
 import { getGardenEntries, getGardenTags, kindLabels } from "../../lib/garden";
+
 const entries = await getGardenEntries();
 const tags = await getGardenTags();
 ---
+
 <BaseLayout title="花园" description="按类型与标签浏览浅靥数字花园的全部公开内容。">
   <header class="page-head"><div><p class="kicker">花园索引 / 02</p><h1>花园</h1></div><div><p>文章、笔记与资源被放在同一个索引中。选择类型或标签，找到下一条值得继续探索的路径。</p></div></header>
-  <section class="filters" aria-label="内容筛选"><button class="active" data-kind="all">全部 <span>{entries.length}</span></button>{Object.entries(kindLabels).map(([kind,label]) => <button data-kind={kind}>{label} <span>{entries.filter((entry)=>entry.data.kind===kind).length}</span></button>)}</section>
-  <div class="tag-filters"><button class="active" data-tag="all">全部标签</button>{tags.map(({tag}) => <button data-tag={tag}>#{tag}</button>)}</div>
-  <section id="garden-list" aria-live="polite">{entries.map((entry,index)=><EntryCard entry={entry} index={index} />)}</section>
+
+  <section class="filters" aria-label="内容类型筛选">
+    <button class="active" data-kind="all" aria-pressed="true">全部 <span>{entries.length}</span></button>
+    {Object.entries(kindLabels).map(([kind, label]) => <button data-kind={kind} aria-pressed="false">{label} <span>{entries.filter((entry) => entry.data.kind === kind).length}</span></button>)}
+  </section>
+  <div class="tag-filters" aria-label="标签筛选">
+    <button class="active" data-tag="all" aria-pressed="true">全部标签</button>
+    {tags.map(({ tag }) => <button data-tag={tag} aria-pressed="false">#{tag}</button>)}
+  </div>
+  <p class="filter-status" aria-live="polite">显示 {entries.length} 条内容</p>
+
+  <section id="garden-list">{entries.map((entry, index) => <EntryCard entry={entry} index={index} />)}</section>
   <p class="empty" hidden>没有符合当前筛选条件的内容。</p>
+
   <script>
     import { matchesGardenFilter } from "../../lib/garden-filter";
     import type { GardenKind } from "../../lib/garden";
+
     const params = new URLSearchParams(location.search);
-    let kind = (params.get("kind") || undefined) as GardenKind | undefined;
+    const validKinds = new Set<GardenKind>(["article", "note", "resource"]);
+    const requestedKind = params.get("kind");
+    let kind = requestedKind && validKinds.has(requestedKind as GardenKind) ? requestedKind as GardenKind : undefined;
     let tag = params.get("tag") || undefined;
     const cards = [...document.querySelectorAll<HTMLElement>("[data-kind].entry")];
     const empty = document.querySelector<HTMLElement>(".empty");
+    const status = document.querySelector<HTMLElement>(".filter-status");
+
+    const updateButton = (button: HTMLElement, selected: boolean) => {
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    };
+
     const apply = () => {
       let visible = 0;
       cards.forEach((card) => {
@@ -28,12 +50,27 @@ const tags = await getGardenTags();
         if (show) visible += 1;
       });
       if (empty) empty.hidden = visible > 0;
-      document.querySelectorAll<HTMLElement>(".filters button").forEach((button) => button.classList.toggle("active", (button.dataset.kind === "all" ? undefined : button.dataset.kind) === kind));
-      document.querySelectorAll<HTMLElement>(".tag-filters button").forEach((button) => button.classList.toggle("active", (button.dataset.tag === "all" ? undefined : button.dataset.tag) === tag));
+      if (status) status.textContent = `显示 ${visible} 条内容`;
+      document.querySelectorAll<HTMLElement>(".filters button").forEach((button) => updateButton(button, (button.dataset.kind === "all" ? undefined : button.dataset.kind) === kind));
+      document.querySelectorAll<HTMLElement>(".tag-filters button").forEach((button) => updateButton(button, (button.dataset.tag === "all" ? undefined : button.dataset.tag) === tag));
+      const nextParams = new URLSearchParams();
+      if (kind) nextParams.set("kind", kind);
+      if (tag) nextParams.set("tag", tag);
+      history.replaceState(null, "", `${location.pathname}${nextParams.size ? `?${nextParams}` : ""}`);
     };
+
     document.querySelectorAll<HTMLElement>(".filters button").forEach((button) => button.addEventListener("click", () => { kind = button.dataset.kind === "all" ? undefined : button.dataset.kind as GardenKind; apply(); }));
     document.querySelectorAll<HTMLElement>(".tag-filters button").forEach((button) => button.addEventListener("click", () => { tag = button.dataset.tag === "all" ? undefined : button.dataset.tag; apply(); }));
     apply();
   </script>
 </BaseLayout>
-<style>.filters,.tag-filters{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}.filters button,.tag-filters button{min-height:48px;border:0;border-right:1px solid var(--line);background:#fff;padding:.65rem 1.2rem;cursor:pointer}.filters button.active,.tag-filters button.active{background:var(--ink);color:#fff}.filters span{color:var(--accent);margin-left:.4rem}.tag-filters{padding:.6rem}.tag-filters button{border:0;min-height:40px;padding:.4rem .7rem}.tag-filters button.active{background:var(--accent)}</style>
+
+<style>
+  .filters, .tag-filters { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--line); background: var(--panel-solid); }
+  .filters button, .tag-filters button { min-height: 48px; padding: .65rem 1.2rem; border: 0; border-right: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+  .filters button:hover, .tag-filters button:hover { background: rgba(0, 255, 255, .06); color: var(--ink); }
+  .filters button.active { background: var(--accent); color: var(--paper); box-shadow: 0 0 18px rgba(0, 255, 255, .14); }
+  .filters span { margin-left: .4rem; color: var(--signal); }.filters button.active span { color: var(--paper); }
+  .tag-filters { padding: .5rem; }.tag-filters button { min-height: 44px; padding: .45rem .7rem; border: 0; }.tag-filters button.active { background: var(--signal); color: var(--paper); }
+  .filter-status { margin: 0; padding: .65rem 1.5rem; border-bottom: 1px solid var(--line); background: var(--panel-deep); color: var(--muted); font-size: .7rem; }
+</style>

@@ -2,8 +2,17 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import home from "../data/home.json";
 ---
+
 <BaseLayout title="关于" description="关于浅靥和这座持续生长的个人数字花园。">
   <header class="page-head"><div><p class="kicker">关于 / 06</p><h1>关于</h1></div><div><p>{home.aboutTitle}</p></div></header>
-  <section class="about-grid"><div><span>01</span><h2>这里记录什么</h2></div><p>我把使用过的工具、值得回访的网站、阅读中的线索，以及生活里的具体观察整理在这里。它们不需要同时成熟，但需要保持真实、可检索，也能在以后继续修订。</p><div><span>02</span><h2>为什么是数字花园</h2></div><p>{home.aboutBody}</p><div><span>03</span><h2>如何阅读</h2></div><p>从花园索引按类型浏览，从标签进入一个主题，或直接使用搜索。想跟踪更新，可以订阅 RSS。</p></section>
+  <section class="about-grid">
+    <div><span>01</span><h2>这里记录什么</h2></div><p>我把使用过的工具、值得回访的网站、阅读中的线索，以及生活里的具体观察整理在这里。它们不需要同时成熟，但需要保持真实、可检索，也能在以后继续修订。</p>
+    <div><span>02</span><h2>为什么是数字花园</h2></div><p>{home.aboutBody}</p>
+    <div><span>03</span><h2>如何阅读</h2></div><p>从花园索引按类型浏览，从标签进入一个主题，或直接使用搜索。想跟踪更新，可以订阅 RSS。</p>
+  </section>
 </BaseLayout>
-<style>.about-grid{display:grid;grid-template-columns:1fr 1fr}.about-grid>*{min-height:240px;padding:2rem 1.5rem;border-bottom:1px solid var(--line)}.about-grid>*:nth-child(even){border-left:1px solid var(--line);font-size:1.2rem}.about-grid span{color:var(--accent);font-weight:700}.about-grid h2{font-size:clamp(2rem,4vw,4rem);line-height:1;letter-spacing:-.05em}@media(max-width:700px){.about-grid{grid-template-columns:1fr}.about-grid>*:nth-child(even){border-left:0}.about-grid>*{min-height:0}}</style>
+
+<style>
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel-overlay); }.about-grid > * { min-height: 240px; padding: 2rem 1.5rem; border-bottom: 1px solid var(--line); }.about-grid > *:nth-child(even) { border-left: 1px solid var(--line); color: var(--copy-strong); font-size: 1.15rem; }.about-grid span { color: var(--signal); font-weight: 700; text-shadow: 0 0 12px rgba(255, 0, 110, .35); }.about-grid h2 { max-width: 14ch; font-size: clamp(2rem, 4vw, 4rem); line-height: 1; letter-spacing: -.05em; text-shadow: 2px 0 rgba(0, 255, 255, .28); }
+  @media (max-width: 700px) { .about-grid { grid-template-columns: 1fr; }.about-grid > *:nth-child(even) { border-left: 0; }.about-grid > * { min-height: 0; } }
+</style>

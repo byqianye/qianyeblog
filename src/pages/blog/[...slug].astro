@@ -5,10 +5,12 @@ import EntryCard from "../../components/EntryCard.astro";
 import MediaPicture from "../../components/MediaPicture.astro";
 import { formatDate, getEntryNeighbors, getGardenEntries, getReadingMinutes, getRelatedEntries, kindLabels } from "../../lib/garden";
 import { siteConfig } from "../../site.config";
+
 export async function getStaticPaths() {
-  const entries = await getCollection("blog", ({data}) => !data.draft);
+  const entries = await getCollection("blog", ({ data }) => !data.draft);
   return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
+
 interface Props { entry: CollectionEntry<"blog">; }
 const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
@@ -18,26 +20,70 @@ const { previous, next } = getEntryNeighbors(entry, entries);
 const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const canonical = `${siteConfig.url}/blog/${entry.id}`;
 const image = entry.data.cover ?? "/images/covers/morning-notes.png";
-const jsonLd = { "@context":"https://schema.org", "@type":"BlogPosting", headline:entry.data.title, description:entry.data.description, image:`${siteConfig.url}${image}`, datePublished:entry.data.pubDate.toISOString(), dateModified:(entry.data.updatedDate ?? entry.data.pubDate).toISOString(), author:{"@type":"Person",name:siteConfig.author}, mainEntityOfPage:canonical };
+const jsonLd = {
+  "@context": "https://schema.org", "@type": "BlogPosting", headline: entry.data.title,
+  description: entry.data.description, image: `${siteConfig.url}${image}`,
+  datePublished: entry.data.pubDate.toISOString(), dateModified: (entry.data.updatedDate ?? entry.data.pubDate).toISOString(),
+  author: { "@type": "Person", name: siteConfig.author }, mainEntityOfPage: canonical
+};
 ---
+
 <BaseLayout title={entry.data.title} description={entry.data.description} image={image} type="article" canonical={canonical}>
   <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <article class="post">
     <header class="post-head">
-      <div class="post-date" aria-hidden="true"><b>{entry.data.pubDate.toISOString().slice(8,10)}</b><span>{entry.data.pubDate.toISOString().slice(0,7).replace('-', '.')}</span></div>
-      <div class="post-title"><p class="kicker">{kindLabels[entry.data.kind]} / {formatDate(entry.data.pubDate, true)}</p><h1>{entry.data.title}</h1><p>{entry.data.description}</p><div class="tag-row">{entry.data.tags.map((tag)=><a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>)}</div></div>
+      <div class="post-date" aria-hidden="true"><b>{entry.data.pubDate.toISOString().slice(8, 10)}</b><span>{entry.data.pubDate.toISOString().slice(0, 7).replace("-", ".")}</span></div>
+      <div class="post-title">
+        <p class="kicker">{kindLabels[entry.data.kind]} / {formatDate(entry.data.pubDate, true)}</p>
+        <h1>{entry.data.title}</h1>
+        <p>{entry.data.description}</p>
+        <div class="tag-row">{entry.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>)}</div>
+      </div>
     </header>
+
     {entry.data.cover && <div class="post-cover"><MediaPicture src={entry.data.cover} alt={entry.data.coverAlt ?? ""} loading="eager" fetchpriority="high" sizes="(max-width: 800px) 100vw, 1200px" /></div>}
+
     <div class="post-layout">
-      <aside class="post-aside"><div><span>阅读</span><b>{getReadingMinutes(entry.body)} 分钟</b></div>{toc.length>0&&<nav aria-label="文章目录"><p>目录</p>{toc.map((heading)=><a class:list={{indent:heading.depth===3}} href={`#${heading.slug}`}>{heading.text}</a>)}</nav>}</aside>
-      <div class="prose"><Content />{entry.data.kind === "resource" && entry.data.externalUrl && <a class="resource-link" href={entry.data.externalUrl} target="_blank" rel="noreferrer">打开外部资源 ↗</a>}</div>
+      <aside class="post-aside">
+        <div><span>阅读时间</span><b>{getReadingMinutes(entry.body)} 分钟</b></div>
+        {toc.length > 0 && <nav aria-label="文章目录"><p>目录</p>{toc.map((heading) => <a class:list={{ indent: heading.depth === 3 }} href={`#${heading.slug}`}>{heading.text}</a>)}</nav>}
+      </aside>
+      <div class="prose">
+        <Content />
+        {entry.data.kind === "resource" && entry.data.externalUrl && <a class="resource-link" href={entry.data.externalUrl} target="_blank" rel="noreferrer">打开外部资源（新窗口）</a>}
+      </div>
     </div>
-    <nav class="post-nav" aria-label="上一篇和下一篇"><div><span>上一篇</span>{previous?<a href={`/blog/${previous.id}`}>{previous.data.title}</a>:<p>已到最早记录</p>}</div><div><span>下一篇</span>{next?<a href={`/blog/${next.id}`}>{next.data.title}</a>:<p>已到最新记录</p>}</div></nav>
-    {related.length>0&&<section><div class="section-label"><span>继续探索</span><span>{String(related.length).padStart(2,'0')}</span></div>{related.map((item,index)=><EntryCard entry={item} index={index} variant="compact" />)}</section>}
+
+    <nav class="post-nav" aria-label="上一篇和下一篇">
+      <div><span>上一篇</span>{previous ? <a href={`/blog/${previous.id}`}>{previous.data.title}</a> : <p>已到最早记录</p>}</div>
+      <div><span>下一篇</span>{next ? <a href={`/blog/${next.id}`}>{next.data.title}</a> : <p>已到最新记录</p>}</div>
+    </nav>
+
+    {related.length > 0 && <section><div class="section-label"><span>继续探索</span><span>{String(related.length).padStart(2, "0")}</span></div>{related.map((item, index) => <EntryCard entry={item} index={index} variant="compact" />)}</section>}
   </article>
 </BaseLayout>
+
 <style>
-  .post-head{display:grid;grid-template-columns:1fr 3fr;min-height:480px;border-bottom:1px solid var(--line)}.post-date{padding:1.5rem;display:flex;flex-direction:column;justify-content:space-between}.post-date b{color:var(--accent);font-size:clamp(7rem,18vw,17rem);line-height:.72;letter-spacing:-.1em}.post-date span{font-size:.75rem}.post-title{border-left:1px solid var(--line);padding:clamp(2rem,6vw,6rem) 1.5rem;display:flex;flex-direction:column;justify-content:flex-end}.post-title h1{max-width:15ch;margin:0 0 1rem;font-size:clamp(3rem,7vw,7rem);line-height:.9;letter-spacing:-.07em}.post-title>p:not(.kicker){max-width:48rem;font-size:1.2rem}.post-cover{padding:1.5rem;border-bottom:1px solid var(--line)}.post-cover img{width:100%;aspect-ratio:16/9;object-fit:cover}.post-layout{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,3fr);border-bottom:1px solid var(--line)}.post-aside{padding:2rem 1.5rem;border-right:1px solid var(--line)}.post-aside>div{display:flex;justify-content:space-between;font-size:.75rem}.post-aside nav{position:sticky;top:2rem;margin-top:4rem}.post-aside nav p{font-size:.7rem;text-transform:uppercase;color:var(--accent)}.post-aside nav a{display:block;padding:.35rem 0;font-size:.8rem;text-decoration:none}.post-aside nav .indent{padding-left:1rem;color:var(--muted)}.prose{width:min(100%,820px);padding:clamp(2rem,6vw,6rem) clamp(1.5rem,5vw,5rem);font-size:1.08rem}.prose :global(h2){margin:3.2rem 0 1rem;font-size:2rem;line-height:1.15}.prose :global(h3){margin:2.4rem 0 .8rem}.prose :global(a){color:var(--accent)}.prose :global(img){margin:2rem 0}.prose :global(blockquote){margin:2rem 0;padding-left:1rem;border-left:4px solid var(--accent)}.resource-link{display:inline-block;margin-top:3rem;padding:1rem;background:var(--accent);color:#fff!important;text-decoration:none;font-weight:700}.post-nav{display:grid;grid-template-columns:1fr 1fr}.post-nav>div{min-height:150px;padding:1.5rem}.post-nav>div+div{border-left:1px solid var(--line)}.post-nav span{display:block;margin-bottom:1rem;color:var(--muted);font-size:.72rem}.post-nav a{font-size:1.25rem;font-weight:700}
-  .post-cover{margin:1.5rem;padding:0;aspect-ratio:16/9;overflow:hidden;border-bottom:0}.post-cover :global(img){width:100%;height:100%;object-fit:cover}.post-layout{border-top:1px solid var(--line)}
-  @media(max-width:800px){.post-head{grid-template-columns:5rem 1fr;min-height:420px}.post-date{padding:1rem}.post-date b{font-size:4rem;writing-mode:vertical-rl}.post-title{padding:2.5rem 1rem}.post-title h1{font-size:2.75rem}.post-cover{margin:0}.post-layout{grid-template-columns:1fr}.post-aside{border-right:0;border-bottom:1px solid var(--line);padding:1rem}.post-aside nav{display:none}.prose{padding:2.5rem 1rem}.post-nav{grid-template-columns:1fr}.post-nav>div+div{border-left:0;border-top:1px solid var(--line)}}
+  .post { background: var(--panel-deep); }
+  .post-head { position: relative; display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(0, 3fr); min-height: 500px; overflow: hidden; border-bottom: 1px solid var(--line-strong); background: linear-gradient(120deg, rgba(0, 255, 255, .04), transparent 44%, rgba(255, 0, 110, .06)); }
+  .post-head::after { content: ""; position: absolute; right: -12rem; bottom: -17rem; width: 34rem; height: 34rem; border: 1px solid rgba(255, 0, 110, .26); border-radius: 50%; box-shadow: inset 0 0 60px rgba(255, 0, 110, .05), 0 0 60px rgba(255, 0, 110, .06); }
+  .post-date { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; }
+  .post-date b { color: var(--signal); font-size: clamp(7rem, 18vw, 17rem); line-height: .72; letter-spacing: -.1em; text-shadow: 0 0 30px rgba(255, 0, 110, .25); }.post-date span { color: var(--muted); font-size: .75rem; }
+  .post-title { position: relative; z-index: 1; display: flex; min-width: 0; flex-direction: column; justify-content: flex-end; padding: clamp(2rem, 6vw, 6rem) 1.5rem; border-left: 1px solid var(--line); }
+  .post-title h1 { max-width: 15ch; margin: 0 0 1rem; overflow-wrap: anywhere; font-size: clamp(3rem, 7vw, 7rem); line-height: .92; letter-spacing: -.07em; text-shadow: 3px 0 rgba(255, 0, 110, .5), -2px 0 rgba(0, 255, 255, .38); }
+  .post-title > p:not(.kicker) { max-width: 48rem; color: #b8cbd0; font-size: 1.15rem; }
+  .post-cover { position: relative; aspect-ratio: 16 / 9; margin: 1.5rem; overflow: hidden; border: 1px solid var(--line); background: var(--soft); }
+  .post-cover::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 65%, rgba(0, 255, 255, .12)); }
+  .post-cover :global(img) { width: 100%; height: 100%; object-fit: cover; filter: saturate(.82) contrast(1.08) brightness(.86); }
+  .post-layout { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr); border-block: 1px solid var(--line); background: #040714; }
+  .post-aside { padding: 2rem 1.5rem; border-right: 1px solid var(--line); color: var(--muted); }.post-aside > div { display: flex; justify-content: space-between; gap: 1rem; font-size: .72rem; }.post-aside > div b { color: var(--accent); }
+  .post-aside nav { position: sticky; top: 7rem; margin-top: 4rem; }.post-aside nav p { color: var(--signal); font-size: .7rem; letter-spacing: .1em; }.post-aside nav a { display: block; padding: .4rem 0; color: #a7bbc0; font-size: .78rem; text-decoration: none; }.post-aside nav a:hover { color: var(--accent); }.post-aside nav .indent { padding-left: 1rem; color: var(--muted); }
+  .prose { width: min(100%, 820px); padding: clamp(2.5rem, 6vw, 6rem) clamp(1.5rem, 5vw, 5rem); color: #d7e4e7; font-family: system-ui, "Microsoft YaHei", sans-serif; font-size: 1.08rem; line-height: 1.85; }
+  .prose :global(h2) { margin: 3.2rem 0 1rem; color: var(--ink); font-family: var(--sans); font-size: 2rem; line-height: 1.2; }.prose :global(h3) { margin: 2.4rem 0 .8rem; color: var(--ink); font-family: var(--sans); }.prose :global(a) { color: var(--accent); }.prose :global(img) { margin: 2rem 0; border: 1px solid var(--line); }.prose :global(blockquote) { margin: 2rem 0; padding: .5rem 0 .5rem 1rem; border-left: 3px solid var(--signal); color: var(--copy-strong); }.prose :global(code) { padding: .12rem .3rem; background: #0b1022; color: #7ffeff; font-family: var(--sans); font-size: .9em; }.prose :global(pre) { overflow: auto; padding: 1rem; border: 1px solid var(--line); background: #01030a; }.prose :global(pre code) { padding: 0; background: transparent; }.prose :global(hr) { border: 0; border-top: 1px solid var(--line); }.prose :global(table) { width: 100%; border-collapse: collapse; }.prose :global(th), .prose :global(td) { padding: .6rem; border: 1px solid var(--line); text-align: left; }
+  .resource-link { display: inline-block; margin-top: 3rem; padding: .9rem 1rem; border: 1px solid var(--accent); background: var(--accent); color: var(--paper) !important; font-family: var(--sans); font-weight: 700; text-decoration: none; box-shadow: 0 0 24px rgba(0, 255, 255, .14); }.resource-link:hover { background: transparent; color: var(--accent) !important; }
+  .post-nav { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel-deep); }.post-nav > div { min-height: 160px; padding: 1.5rem; transition: background-color .2s ease; }.post-nav > div:hover { background: var(--panel-hover); }.post-nav > div + div { border-left: 1px solid var(--line); }.post-nav span { display: block; margin-bottom: 1rem; color: var(--muted); font-size: .72rem; }.post-nav a { font-size: 1.2rem; font-weight: 700; }.post-nav p { color: var(--muted); }
+  .resource-link { display: inline-flex; min-height: 44px; align-items: center; }.post-nav a { display: inline-flex; min-height: 44px; align-items: center; }
+  @media (max-width: 800px) {
+    .post-head { grid-template-columns: 5rem minmax(0, 1fr); min-height: 430px; }.post-date { padding: 1rem; }.post-date b { font-size: 4rem; writing-mode: vertical-rl; }.post-title { padding: 2.5rem 1rem; }.post-title h1 { font-size: 2.65rem; }.post-cover { margin: 0; border-inline: 0; }.post-layout { grid-template-columns: 1fr; }.post-aside { padding: 1rem; border-right: 0; border-bottom: 1px solid var(--line); }.post-aside nav { display: none; }.prose { padding: 2.5rem 1rem; }.post-nav { grid-template-columns: 1fr; }.post-nav > div + div { border-top: 1px solid var(--line); border-left: 0; }
+  }
 </style>

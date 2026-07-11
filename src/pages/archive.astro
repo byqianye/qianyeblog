@@ -8,8 +8,13 @@ const years = entries.reduce((groups, entry) => {
   return groups;
 }, new Map<number, typeof entries>());
 ---
+
 <BaseLayout title="归档" description="按年份浏览浅靥数字花园的全部公开记录。">
   <header class="page-head"><div><p class="kicker">时间归档 / 03</p><h1>归档</h1></div><div><p>{entries.length} 条公开记录，按最初发布日期排列。内容更新不会改变它在时间轴上的位置。</p></div></header>
-  <section class="timeline">{[...years].map(([year,items])=><div class="year"><h2>{year}</h2><div>{items.map((entry,index)=><a href={`/blog/${entry.id}`}><b>{String(index+1).padStart(2,'0')}</b><time>{formatDate(entry.data.pubDate,true)}</time><span>{entry.data.title}</span><small>{kindLabels[entry.data.kind]}</small></a>)}</div></div>)}</section>
+  <section class="timeline">{[...years].map(([year, items]) => <div class="year"><h2>{year}</h2><div>{items.map((entry, index) => <a href={`/blog/${entry.id}`}><b>{String(index + 1).padStart(2, "0")}</b><time>{formatDate(entry.data.pubDate, true)}</time><span>{entry.data.title}</span><small>{kindLabels[entry.data.kind]}</small></a>)}</div></div>)}</section>
 </BaseLayout>
-<style>.year{display:grid;grid-template-columns:1fr 3fr;border-bottom:1px solid var(--line)}.year h2{margin:0;padding:1.5rem;color:var(--accent);font-size:clamp(4rem,12vw,11rem);line-height:.8;letter-spacing:-.08em}.year>div{border-left:1px solid var(--line)}.year a{display:grid;grid-template-columns:3rem 8rem 1fr 5rem;gap:1rem;padding:1.2rem;border-bottom:1px solid var(--line);text-decoration:none}.year a:last-child{border-bottom:0}.year b,.year small{color:var(--muted);font-size:.72rem}.year time{font-size:.78rem}@media(max-width:700px){.year{grid-template-columns:1fr}.year>div{border-left:0;border-top:1px solid var(--line)}.year a{grid-template-columns:2rem 1fr auto}.year time{display:none}.year h2{font-size:5rem}}</style>
+
+<style>
+  .timeline { background: var(--panel-overlay); }.year { display: grid; grid-template-columns: 1fr 3fr; border-bottom: 1px solid var(--line); }.year h2 { margin: 0; padding: 1.5rem; color: var(--signal); font-size: clamp(4rem, 12vw, 11rem); line-height: .8; letter-spacing: -.08em; text-shadow: 0 0 24px rgba(255, 0, 110, .24); }.year > div { border-left: 1px solid var(--line); }.year a { display: grid; grid-template-columns: 3rem 8rem minmax(0, 1fr) 5rem; gap: 1rem; padding: 1.2rem; border-bottom: 1px solid var(--line); text-decoration: none; transition: background-color .2s ease; }.year a:hover { background: var(--panel-hover); }.year a:last-child { border-bottom: 0; }.year a span { overflow-wrap: anywhere; }.year b, .year small { color: var(--muted); font-size: .72rem; }.year time { color: var(--accent); font-size: .78rem; }
+  @media (max-width: 700px) { .year { grid-template-columns: 1fr; }.year > div { border-top: 1px solid var(--line); border-left: 0; }.year a { grid-template-columns: 2rem minmax(0, 1fr) auto; }.year time { display: none; }.year h2 { font-size: 5rem; } }
+</style>

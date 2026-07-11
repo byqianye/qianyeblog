@@ -3,5 +3,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getGardenTags } from "../../lib/garden";
 const tags = await getGardenTags();
 ---
-<BaseLayout title="标签" description="从主题标签进入浅靥的个人数字花园。"><header class="page-head"><div><p class="kicker">主题索引 / 04</p><h1>标签</h1></div><div><p>标签把不同类型、不同时间的记录重新连接起来。数字表示当前公开内容数量。</p></div></header><section class="tags">{tags.map(({tag,count},index)=><a href={`/tags/${encodeURIComponent(tag)}`}><b>{String(index+1).padStart(2,'0')}</b><span>{tag}</span><sup>{count}</sup></a>)}</section></BaseLayout>
-<style>.tags{display:grid;grid-template-columns:repeat(2,1fr)}.tags a{min-height:180px;padding:1.5rem;border-bottom:1px solid var(--line);display:grid;grid-template-columns:3rem 1fr auto;align-items:end;text-decoration:none}.tags a:nth-child(even){border-left:1px solid var(--line)}.tags b,.tags sup{color:var(--accent)}.tags span{font-size:clamp(2rem,5vw,5rem);font-weight:700;line-height:1;letter-spacing:-.06em}@media(max-width:650px){.tags{grid-template-columns:1fr}.tags a:nth-child(even){border-left:0}}</style>
+
+<BaseLayout title="标签" description="从主题标签进入浅靥的个人数字花园。">
+  <header class="page-head"><div><p class="kicker">主题索引 / 04</p><h1>标签</h1></div><div><p>标签把不同类型、不同时间的记录重新连接起来。数字表示当前公开内容数量。</p></div></header>
+  <section class="tags">{tags.map(({ tag, count }, index) => <a href={`/tags/${encodeURIComponent(tag)}`}><b>{String(index + 1).padStart(2, "0")}</b><span>{tag}</span><sup>{count}</sup></a>)}</section>
+</BaseLayout>
+
+<style>
+  .tags { display: grid; grid-template-columns: repeat(2, 1fr); background: var(--panel-overlay); }.tags a { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; align-items: end; min-height: 180px; padding: 1.5rem; border-bottom: 1px solid var(--line); text-decoration: none; transition: background-color .2s ease; }.tags a:hover { background: var(--panel-hover); }.tags a:nth-child(even) { border-left: 1px solid var(--line); }.tags b { color: var(--accent); }.tags sup { color: var(--signal); }.tags span { overflow-wrap: anywhere; font-size: clamp(2rem, 5vw, 5rem); font-weight: 700; line-height: 1; letter-spacing: -.06em; }
+  @media (max-width: 650px) { .tags { grid-template-columns: 1fr; }.tags a:nth-child(even) { border-left: 0; } }
+</style>

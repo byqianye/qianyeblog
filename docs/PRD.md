@@ -1,8 +1,8 @@
-# Swiss Digital Garden PRD
+# Interactive Digital Garden PRD
 
 ## Objective
 
-Transform Qianye Blog into a light-only Swiss editorial personal digital garden while preserving all published content, slugs, `/blog` routes, RSS, and sitemap compatibility.
+Transform Qianye Blog into an immersive retro-futuristic personal digital garden inspired by lightweight HTML5 Canvas experiments while preserving all published content, slugs, `/blog` routes, RSS, and sitemap compatibility.
 
 ## Audience and Jobs
 
@@ -12,11 +12,13 @@ Transform Qianye Blog into a light-only Swiss editorial personal digital garden 
 
 ## Experience Requirements
 
-- Use a white and light-gray grid, black sans-serif typography, hairline rules, and International Orange (`#ff4f00`) as the only accent.
-- Use oversized dates and sequence numbers as the primary visual motif.
-- Provide compact asymmetric homepage sections for positioning, featured entries, recent entries, kinds, and tags.
+- Use a deep navy surface, system monospace typography, cyan and magenta signals, hairline rules, and restrained scanlines.
+- Use a site-wide dependency-free particle field, oversized dates, and sequence numbers as the primary visual motif.
+- Pointer interaction remains decorative, never blocks reading or navigation, and degrades to a static frame for reduced motion.
+- Provide an immersive but bounded homepage hero followed by compact sections for featured entries, recent entries, kinds, and tags.
+- Use `nebula.html` as the primary motion reference: slow orbital particles, restrained pointer parallax, and luminous depth without copying its implementation.
 - Provide a stable article measure, 16:9 cover, desktop table of contents, and previous/next navigation.
-- Support 1440 px, 768 px, and 390 px layouts without horizontal overflow.
+- Support 1440 px, 768 px, and 390 px layouts without horizontal overflow or Canvas-driven layout shift.
 - Meet keyboard, focus, contrast, touch-target, reduced-motion, and skip-navigation requirements.
 
 ## Content Requirements
