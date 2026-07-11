@@ -1,19 +1,20 @@
 {
-  "name": "quiet-life-blog",
+  "name": "qianye-digital-garden",
   "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "media": "node .tools/build-media.mjs",
+    "predev": "corepack pnpm media",
     "dev": "astro dev",
+    "prebuild": "corepack pnpm media",
     "build": "astro build",
     "preview": "astro preview",
-    "admin": "node server/admin-server.mjs",
-    "start": "node server/admin-server.mjs",
-    "init:admin": "node server/init-admin.mjs",
+    "precheck": "corepack pnpm media",
     "check": "astro check",
     "test:site": "corepack pnpm build && node .tools/verify-site.mjs",
-    "test:admin": "node .tools/admin-smoke.mjs",
-    "test": "corepack pnpm check && corepack pnpm test:site && corepack pnpm test:admin",
+    "test:unit": "node --test tests/*.test.mjs",
+    "test": "corepack pnpm check && corepack pnpm test:unit && corepack pnpm test:site",
     "astro": "astro"
   },
   "dependencies": {

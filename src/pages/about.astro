@@ -1,41 +1,9 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { siteConfig } from "../site.config";
-import homeContent from "../data/home.json";
-
-const aboutPage = {
-  title: homeContent.aboutPageTitle ?? "关于",
-  description: homeContent.aboutPageDescription ?? "关于作者与这个博客。",
-  eyebrow: homeContent.aboutEyebrow ?? "About",
-  intro:
-    homeContent.aboutIntro ??
-    "这是一个暂时使用中性笔名的个人博客。它适合放生活札记、阅读摘抄、城市漫游和那些没有被社交媒体吞掉的长一点的想法。",
-  sectionOneTitle: homeContent.aboutSectionOneTitle ?? "这里会写什么",
-  sectionOneBody:
-    homeContent.aboutSectionOneBody ??
-    "写普通日子里的观察，也写读书、观影、散步和季节更替。文章不追逐热点，只保留慢一点的判断和更耐读的情绪。",
-  sectionTwoTitle: homeContent.aboutSectionTwoTitle ?? "如何替换成你的资料",
-  sectionTwoBody:
-    homeContent.aboutSectionTwoBody ??
-    "修改后台里的站点设置可以更换站点名、作者名、简介、联系方式和页面文案；在文章管理里新增文章即可发布内容。",
-  buttonLabel: homeContent.aboutButtonLabel ?? "写封邮件"
-};
+import home from "../data/home.json";
 ---
-
-<BaseLayout title={aboutPage.title} description={aboutPage.description}>
-  <section class="about-layout">
-    <div class="page-intro">
-      <p class="eyebrow">{aboutPage.eyebrow}</p>
-      <h1>{siteConfig.author}</h1>
-      <p>{aboutPage.intro}</p>
-    </div>
-
-    <div class="about-note">
-      <h2>{aboutPage.sectionOneTitle}</h2>
-      <p>{aboutPage.sectionOneBody}</p>
-      <h2>{aboutPage.sectionTwoTitle}</h2>
-      <p>{aboutPage.sectionTwoBody}</p>
-      <a class="button primary" href={`mailto:${siteConfig.email}`}>{aboutPage.buttonLabel}</a>
-    </div>
-  </section>
+<BaseLayout title="关于" description="关于浅靥和这座持续生长的个人数字花园。">
+  <header class="page-head"><div><p class="kicker">关于 / 06</p><h1>关于</h1></div><div><p>{home.aboutTitle}</p></div></header>
+  <section class="about-grid"><div><span>01</span><h2>这里记录什么</h2></div><p>我把使用过的工具、值得回访的网站、阅读中的线索，以及生活里的具体观察整理在这里。它们不需要同时成熟，但需要保持真实、可检索，也能在以后继续修订。</p><div><span>02</span><h2>为什么是数字花园</h2></div><p>{home.aboutBody}</p><div><span>03</span><h2>如何阅读</h2></div><p>从花园索引按类型浏览，从标签进入一个主题，或直接使用搜索。想跟踪更新，可以订阅 RSS。</p></section>
 </BaseLayout>
+<style>.about-grid{display:grid;grid-template-columns:1fr 1fr}.about-grid>*{min-height:240px;padding:2rem 1.5rem;border-bottom:1px solid var(--line)}.about-grid>*:nth-child(even){border-left:1px solid var(--line);font-size:1.2rem}.about-grid span{color:var(--accent);font-weight:700}.about-grid h2{font-size:clamp(2rem,4vw,4rem);line-height:1;letter-spacing:-.05em}@media(max-width:700px){.about-grid{grid-template-columns:1fr}.about-grid>*:nth-child(even){border-left:0}.about-grid>*{min-height:0}}</style>

@@ -1,15 +1,5 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-
-<BaseLayout title="页面不存在" description="这个页面暂时找不到。">
-  <section class="not-found-page">
-    <p class="eyebrow">404</p>
-    <h1>这页暂时找不到</h1>
-    <p>可能是链接变了，也可能是这篇内容还没有公开。可以回到首页，或者去文章列表慢慢找。</p>
-    <div class="hero-actions">
-      <a class="button primary" href="/">返回首页</a>
-      <a class="button quiet" href="/blog">查看文章</a>
-    </div>
-  </section>
-</BaseLayout>
+<BaseLayout title="页面未找到" description="请求的页面不存在。"><section class="not-found"><b aria-hidden="true">404</b><div><p class="kicker">路径未找到</p><h1>这条路径<br />还没有内容。</h1><p>链接可能已经改变，或者这块内容仍在整理。</p><a class="button-link" href="/blog">返回花园</a></div></section></BaseLayout>
+<style>.not-found{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 192px)}.not-found>b{overflow:hidden;color:var(--accent);font-size:clamp(8rem,25vw,24rem);line-height:.75;letter-spacing:-.12em}.not-found>div{display:flex;flex-direction:column;justify-content:center;padding:2rem;border-left:1px solid var(--line)}.not-found h1{font-size:clamp(3rem,7vw,7rem);line-height:.9;letter-spacing:-.07em}@media(max-width:700px){.not-found{grid-template-columns:1fr}.not-found>b{font-size:10rem}.not-found>div{border-left:0;border-top:1px solid var(--line)}}</style>

@@ -1,4 +1,4 @@
-import { getAllPosts, getAllTags } from "../lib/content";
+import { getGardenEntries, getGardenTags } from "../lib/garden";
 import { siteConfig } from "../site.config";
 
 function urlEntry(url, { changefreq = "weekly", priority = "0.7", lastmod } = {}) {
@@ -8,8 +8,8 @@ function urlEntry(url, { changefreq = "weekly", priority = "0.7", lastmod } = {}
 
 export async function GET() {
   const siteUrl = siteConfig.url.replace(/\/$/, "");
-  const posts = await getAllPosts();
-  const tags = await getAllTags();
+  const posts = await getGardenEntries();
+  const tags = await getGardenTags();
   const staticPaths = ["/", "/blog", "/archive", "/tags", "/search", "/about"];
   const urls = [
     ...staticPaths.map((path) => urlEntry(`${siteUrl}${path}`, { changefreq: path === "/" ? "daily" : "weekly", priority: path === "/" ? "1.0" : "0.7" })),

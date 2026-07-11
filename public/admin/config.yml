@@ -5,27 +5,47 @@ backend:
   base_url: https://qianyeblog.pages.dev
   auth_endpoint: api/auth
   squash_merges: true
-
-media_folder: "public/images/uploads"
-public_folder: "/images/uploads"
-
+media_folder: public/images/uploads
+public_folder: /images/uploads
 publish_mode: editorial_workflow
-
 collections:
-  - name: "blog"
-    label: "文章管理"
-    folder: "src/content/blog"
+  - name: garden
+    label: 花园内容
+    folder: src/content/blog
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
-    editor:
-      preview: false
+    editor: { preview: false }
     fields:
-      - { label: "标题", name: "title", widget: "string" }
-      - { label: "摘要", name: "description", widget: "text" }
-      - { label: "发布时间", name: "pubDate", widget: "datetime" }
-      - { label: "更新时间", name: "updatedDate", widget: "datetime", required: false }
-      - { label: "分类", name: "category", widget: "select", options: ["生活随笔", "随心分享", "阅读笔记", "技术记录"], default: "随心分享" }
-      - { label: "标签", name: "tags", widget: "select", multiple: true, required: false, options: ["生活", "随笔", "阅读", "笔记", "技术", "工具", "软件", "效率工具", "网站推荐", "影视"] }
-      - { label: "封面图", name: "cover", widget: "image", required: false, hint: "建议上传压缩后的 JPG/WebP/PNG，宽度 1600px 以内。" }
-      - { label: "草稿", name: "draft", widget: "boolean", default: false }
-      - { label: "正文", name: "body", widget: "markdown" }
+      - { label: 类型, name: kind, widget: select, options: [{ label: 文章, value: article }, { label: 笔记, value: note }, { label: 资源, value: resource }] }
+      - { label: 标题, name: title, widget: string }
+      - { label: 摘要, name: description, widget: text }
+      - { label: 发布日期, name: pubDate, widget: datetime, date_format: YYYY-MM-DD, time_format: false }
+      - { label: 更新日期, name: updatedDate, widget: datetime, required: false, date_format: YYYY-MM-DD, time_format: false }
+      - { label: 标签, name: tags, widget: list, default: [] }
+      - { label: 封面, name: cover, widget: image, required: false }
+      - { label: 封面替代文字, name: coverAlt, widget: string, required: false }
+      - { label: 外部链接, name: externalUrl, widget: string, required: false, hint: 资源类型必须填写完整 URL }
+      - { label: 精选, name: featured, widget: boolean, default: false }
+      - { label: 草稿, name: draft, widget: boolean, default: false }
+      - { label: 正文, name: body, widget: markdown }
+  - name: settings
+    label: 网站设置
+    files:
+      - label: 站点
+        name: site
+        file: src/data/site.json
+        fields:
+          - { label: 站名, name: title, widget: string }
+          - { label: 作者, name: author, widget: string }
+          - { label: 描述, name: description, widget: text }
+          - { label: 站点地址, name: url, widget: string }
+          - { label: 图标, name: favicon, widget: image }
+      - label: 首页与关于
+        name: home
+        file: src/data/home.json
+        fields:
+          - { label: 英文眉题, name: kicker, widget: string }
+          - { label: 首页标题, name: title, widget: string }
+          - { label: 首页描述, name: description, widget: text }
+          - { label: 关于标题, name: aboutTitle, widget: string }
+          - { label: 关于正文, name: aboutBody, widget: text }

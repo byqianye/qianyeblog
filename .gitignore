@@ -3,10 +3,11 @@ node_modules/
 dist/
 .pnpm-store/
 artifacts/
+public/generated/
+src/generated/
 .upload-qianyeblog/
 .tools/pnpm/
 .tools/*.tgz
-server/admin.json
 .env
 .env.*
 !.env.example

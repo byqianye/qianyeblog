@@ -1,32 +1,25 @@
 ---
-title: "谷歌/火狐浏览器"
-description: "奶酪增强版Chorme/Firefox"
+kind: resource
+title: "谷歌 / 火狐浏览器增强版"
+description: "RunningCheese 制作的 Chrome 与 Firefox 便携增强版本。"
 pubDate: "2026-06-04"
-tags: ["工具"]
+tags: ["工具", "软件", "效率工具"]
 cover: "/images/uploads/1780581841881-1.png"
-coverWidth: 1975
-coverHeight: 796
+coverAlt: "浏览器增强版介绍截图"
+externalUrl: "https://www.lanzouh.com/b0ufrtlc"
+featured: false
 draft: false
 ---
 
-RunningCheeseFirefox
+## 下载地址
 
-🔗https://www.lanzouh.com/b0ufrtlc
+- [RunningCheese Firefox](https://www.lanzouh.com/b0ufrtlc)
+- [RunningCheese Chrome](https://www.lanzouh.com/b0ufru1i)
 
-RunningCheeseChrome
+## 特点
 
-🔗https://www.lanzouh.com/b0ufru1i
+- 绿色免安装，解压即可使用。
+- 预装并配置了常用功能，包括广告过滤、翻译和下载增强。
+- 针对国内用户习惯优化，减少从零配置插件的时间。
 
-优点
-
-✅ 绿色免安装，解压即用
-
-✅ 预装并配置好大量实用功能
-
-✅ 去广告、翻译、下载增强、网盘优化等开箱即用
-
-✅ 针对国内用户习惯优化
-
-✅ 自带大量高质量书签和效率工具
-
-✅ 不需要自己花几个小时折腾插件配置
+使用第三方打包软件前，请自行核对来源与文件安全性。

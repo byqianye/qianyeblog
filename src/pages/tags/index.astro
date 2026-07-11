@@ -1,35 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import EmptyState from "../../components/EmptyState.astro";
-import { getAllTags } from "../../lib/content";
-import homeContent from "../../data/home.json";
-
-const tags = await getAllTags();
-const tagsPage = {
-  eyebrow: homeContent.tagsPageEyebrow ?? "Index",
-  title: homeContent.tagsPageTitle ?? "标签",
-  description:
-    homeContent.tagsPageDescription ??
-    "从主题进入文章：日常、散步、阅读、电影，以及那些暂时还没有名字的生活片段。",
-  listAriaLabel: homeContent.tagsListAriaLabel ?? "标签列表"
-};
+import { getGardenTags } from "../../lib/garden";
+const tags = await getGardenTags();
 ---
-
-<BaseLayout title={tagsPage.title} description={tagsPage.description}>
-  <section class="page-intro">
-    <p class="eyebrow">{tagsPage.eyebrow}</p>
-    <h1>{tagsPage.title}</h1>
-    <p>{tagsPage.description}</p>
-  </section>
-
-  <section class="tag-cloud" aria-label={tagsPage.listAriaLabel}>
-    {
-      tags.length > 0 ? tags.map(({ tag, count }) => (
-        <a href={`/tags/${encodeURIComponent(tag)}`}>
-          <span>{tag}</span>
-          <small>{count}</small>
-        </a>
-      )) : <EmptyState title="还没有标签" description="发布带标签的文章后，这里会自动生成主题索引。" />
-    }
-  </section>
-</BaseLayout>
+<BaseLayout title="标签" description="从主题标签进入浅靥的个人数字花园。"><header class="page-head"><div><p class="kicker">主题索引 / 04</p><h1>标签</h1></div><div><p>标签把不同类型、不同时间的记录重新连接起来。数字表示当前公开内容数量。</p></div></header><section class="tags">{tags.map(({tag,count},index)=><a href={`/tags/${encodeURIComponent(tag)}`}><b>{String(index+1).padStart(2,'0')}</b><span>{tag}</span><sup>{count}</sup></a>)}</section></BaseLayout>
+<style>.tags{display:grid;grid-template-columns:repeat(2,1fr)}.tags a{min-height:180px;padding:1.5rem;border-bottom:1px solid var(--line);display:grid;grid-template-columns:3rem 1fr auto;align-items:end;text-decoration:none}.tags a:nth-child(even){border-left:1px solid var(--line)}.tags b,.tags sup{color:var(--accent)}.tags span{font-size:clamp(2rem,5vw,5rem);font-weight:700;line-height:1;letter-spacing:-.06em}@media(max-width:650px){.tags{grid-template-columns:1fr}.tags a:nth-child(even){border-left:0}}</style>

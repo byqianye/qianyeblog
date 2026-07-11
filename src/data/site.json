@@ -1,17 +1,7 @@
 {
   "title": "浅靥",
   "author": "Qianye",
-  "description": "一处安静的中文个人博客，记录日常、阅读、散步和生活里偶然亮起来的句子。",
+  "description": "浅靥的个人数字花园：记录工具、网站、阅读与生活中的发现。",
   "url": "https://qianyeblog.pages.dev",
-  "email": "",
-  "brandMark": "浅",
-  "favicon": "/favicon.svg",
-  "navHomeLabel": "首页",
-  "navBlogLabel": "文章",
-  "navArchiveLabel": "归档",
-  "navTagsLabel": "标签",
-  "navSearchLabel": "搜索",
-  "navAboutLabel": "关于",
-  "socialEmailLabel": "Email",
-  "socialRssLabel": "RSS"
+  "favicon": "/favicon.svg"
 }

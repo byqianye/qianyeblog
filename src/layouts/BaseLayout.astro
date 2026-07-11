@@ -1,126 +1,33 @@
 ---
 import { siteConfig } from "../site.config";
-import BackToTop from "../components/BackToTop.astro";
 import "../styles/global.css";
-
-interface Props {
-  title?: string;
-  description?: string;
-  image?: string;
-  type?: "website" | "article";
-  canonical?: string;
-}
-
-const {
-  title = siteConfig.title,
-  description = siteConfig.description,
-  image = "/images/covers/morning-notes.png",
-  type = "website",
-  canonical
-} = Astro.props;
-const pageTitle = title === siteConfig.title ? title : `${title} | ${siteConfig.title}`;
+interface Props { title?: string; description?: string; image?: string; type?: "website" | "article"; canonical?: string; }
+const { title = siteConfig.title, description = siteConfig.description, image = "/images/covers/morning-notes.png", type = "website", canonical } = Astro.props;
+const pageTitle = title === siteConfig.title ? title : `${title} — ${siteConfig.title}`;
 const siteUrl = siteConfig.url.replace(/\/$/, "");
 const canonicalUrl = canonical ?? `${siteUrl}${Astro.url.pathname}`;
-const absoluteImage = image.startsWith("http") ? image : `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
-const isCurrentNavItem = (href: string) =>
-  href === "/" ? Astro.url.pathname === "/" : Astro.url.pathname === href || Astro.url.pathname.startsWith(`${href}/`);
-const websiteJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: siteConfig.title,
-  url: siteUrl,
-  description: siteConfig.description,
-  inLanguage: "zh-CN",
-  author: { "@type": "Person", name: siteConfig.author }
-};
+const absoluteImage = image.startsWith("http") ? image : `${siteUrl}${image}`;
+const current = (href: string) => href === "/" ? Astro.url.pathname === "/" : Astro.url.pathname === href || Astro.url.pathname.startsWith(`${href}/`);
+const websiteJsonLd = { "@context": "https://schema.org", "@type": "WebSite", name: siteConfig.title, url: siteUrl, description: siteConfig.description, inLanguage: "zh-CN", author: { "@type": "Person", name: siteConfig.author } };
 ---
-
 <!doctype html>
 <html lang="zh-CN">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
-    <meta name="theme-color" content="#e8dcc7" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#283324" media="(prefers-color-scheme: dark)" />
-    <link rel="canonical" href={canonicalUrl} />
-    <link rel="icon" href={siteConfig.favicon} type="image/svg+xml" />
-    <link rel="alternate" type="application/rss+xml" title={siteConfig.title} href="/rss.xml" />
-    <meta property="og:site_name" content={siteConfig.title} />
-    <meta property="og:title" content={pageTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:type" content={type} />
-    <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={absoluteImage} />
-    <meta property="og:locale" content="zh_CN" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={pageTitle} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={absoluteImage} />
-    <title>{pageTitle}</title>
-    {type === "website" && <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />}
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} /><meta name="theme-color" content="#ffffff" />
+    <link rel="canonical" href={canonicalUrl} /><link rel="icon" href={siteConfig.favicon} type="image/svg+xml" /><link rel="alternate" type="application/rss+xml" title={siteConfig.title} href="/rss.xml" />
+    <meta property="og:site_name" content={siteConfig.title} /><meta property="og:title" content={pageTitle} /><meta property="og:description" content={description} /><meta property="og:type" content={type} /><meta property="og:url" content={canonicalUrl} /><meta property="og:image" content={absoluteImage} /><meta property="og:locale" content="zh_CN" />
+    <meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content={pageTitle} /><meta name="twitter:description" content={description} /><meta name="twitter:image" content={absoluteImage} />
+    <title>{pageTitle}</title>{type === "website" && <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />}
   </head>
   <body>
-    <div class="reading-progress" aria-hidden="true"></div>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
-      <a class="brand" href="/" aria-label={`${siteConfig.title} 首页`}>
-        <span class="brand-mark" aria-hidden="true">{siteConfig.brandMark}</span>
-        <span>{siteConfig.title}</span>
-      </a>
-      <nav class="desktop-nav" aria-label="主导航">
-        {
-          siteConfig.nav.map((item) => (
-            <a href={item.href} aria-current={isCurrentNavItem(item.href) ? "page" : undefined}>
-              {item.label}
-            </a>
-          ))
-        }
-      </nav>
-      <details class="mobile-nav">
-        <summary aria-label="打开导航">
-          <span></span>
-          <span></span>
-        </summary>
-        <nav aria-label="移动端主导航">
-          {siteConfig.nav.map((item) => <a href={item.href} aria-current={isCurrentNavItem(item.href) ? "page" : undefined}>{item.label}</a>)}
-        </nav>
-      </details>
+      <a class="brand" href="/" aria-label="浅靥首页"><strong>浅靥</strong><span>个人数字花园</span></a>
+      <nav class="desktop-nav" aria-label="主导航">{siteConfig.nav.map((item) => <a href={item.href} aria-current={current(item.href) ? "page" : undefined}>{item.label}</a>)}</nav>
+      <details class="mobile-nav"><summary>菜单</summary><nav aria-label="移动端主导航">{siteConfig.nav.map((item) => <a href={item.href}>{item.label}</a>)}</nav></details>
     </header>
-    <main id="main-content" class="page-enter" tabindex="-1">
-      <slot />
-    </main>
-    <footer class="site-footer">
-      <p>© {new Date().getFullYear()} {siteConfig.author}</p>
-      <div>
-        {siteConfig.social.map((item) => <a href={item.href}>{item.label}</a>)}
-      </div>
-    </footer>
-    <BackToTop />
-    <script is:inline>
-      (() => {
-        const progress = document.querySelector(".reading-progress");
-        const backToTop = document.querySelector(".back-to-top");
-        const mobileNav = document.querySelector(".mobile-nav");
-        if (!progress) return;
-
-        function updateProgress() {
-          const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-          const value = scrollable > 0 ? window.scrollY / scrollable : 0;
-          progress.style.transform = `scaleX(${Math.min(1, Math.max(0, value))})`;
-          backToTop?.classList.toggle("visible", window.scrollY > 520);
-        }
-
-        updateProgress();
-        window.addEventListener("scroll", updateProgress, { passive: true });
-        window.addEventListener("resize", updateProgress);
-        backToTop?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-        mobileNav?.querySelectorAll("a").forEach((link) => {
-          link.addEventListener("click", () => {
-            mobileNav.removeAttribute("open");
-          });
-        });
-      })();
-    </script>
+    <main id="main-content" tabindex="-1"><slot /></main>
+    <footer class="site-footer"><p>© {new Date().getFullYear()} Qianye / 持续整理中</p><a href="/rss.xml">RSS ↗</a></footer>
   </body>
 </html>

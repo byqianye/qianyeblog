@@ -4,16 +4,21 @@ import { glob } from "astro/loaders";
 const blog = defineCollection({
   loader: glob({ base: "./src/content/blog", pattern: "**/*.md" }),
   schema: z.object({
-    title: z.string(),
-    description: z.string().default(""),
+    kind: z.enum(["article", "note", "resource"]),
+    title: z.string().min(1),
+    description: z.string().min(1),
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
-    category: z.string().default("随心分享"),
     tags: z.array(z.string()).default([]),
-    cover: z.string().default("/images/covers/morning-notes.png"),
-    coverWidth: z.number().int().positive().optional(),
-    coverHeight: z.number().int().positive().optional(),
+    cover: z.string().optional(),
+    coverAlt: z.string().optional(),
+    externalUrl: z.string().url().optional(),
+    featured: z.boolean().default(false),
     draft: z.boolean().default(false)
+  }).superRefine((entry, context) => {
+    if (entry.kind === "resource" && !entry.externalUrl) {
+      context.addIssue({ code: "custom", path: ["externalUrl"], message: "Resources require a valid externalUrl." });
+    }
   })
 });
 

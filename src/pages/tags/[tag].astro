@@ -1,54 +1,8 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import ArticleCard from "../../components/ArticleCard.astro";
-import EmptyState from "../../components/EmptyState.astro";
-import { getAllPosts, getAllTags } from "../../lib/content";
-import homeContent from "../../data/home.json";
-
-export async function getStaticPaths() {
-  const tags = await getAllTags();
-  return tags.map(({ tag }) => ({
-    params: { tag },
-    props: { tag }
-  }));
-}
-
-const { tag } = Astro.props;
-const posts = (await getAllPosts()).filter((post) => post.data.tags.includes(tag));
-const replaceTemplate = (template: string, values: Record<string, string | number>) =>
-  Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, String(value)), template);
-const tagPage = {
-  title: `${homeContent.tagDetailTitlePrefix ?? "标签："}${tag}`,
-  description: replaceTemplate(homeContent.tagDetailDescriptionTemplate ?? "浏览标签「{tag}」下的文章。", { tag }),
-  eyebrow: homeContent.tagDetailEyebrow ?? "Tagged",
-  countText: replaceTemplate(homeContent.tagDetailCountTemplate ?? "这个标签下共有 {count} 篇文字。", { count: posts.length }),
-  listAriaLabel: replaceTemplate(homeContent.tagDetailListAriaTemplate ?? "标签 {tag} 的文章", { tag })
-};
+import EntryCard from "../../components/EntryCard.astro";
+import { filterEntries, getGardenEntries, getGardenTags } from "../../lib/garden";
+export async function getStaticPaths(){return (await getGardenTags()).map(({tag})=>({params:{tag},props:{tag}}));}
+const { tag } = Astro.props; const entries = filterEntries(await getGardenEntries(), {tag});
 ---
-
-<BaseLayout title={tagPage.title} description={tagPage.description}>
-  <section class="page-intro">
-    <p class="eyebrow">{tagPage.eyebrow}</p>
-    <h1>{tag}</h1>
-    <p>{tagPage.countText}</p>
-  </section>
-
-  <section class="archive-list" aria-label={tagPage.listAriaLabel}>
-    {
-      posts.length > 0 ? posts.map((post) => (
-        <ArticleCard
-          href={`/blog/${post.id}`}
-          title={post.data.title}
-          description={post.data.description}
-          pubDate={post.data.pubDate}
-          tags={post.data.tags}
-          category={post.data.category}
-          cover={post.data.cover}
-          coverWidth={post.data.coverWidth}
-          coverHeight={post.data.coverHeight}
-          body={post.body}
-        />
-      )) : <EmptyState title="这个标签下暂无文章" description="可以回到标签页看看其他主题。" actionHref="/tags" actionLabel="查看标签" />
-    }
-  </section>
-</BaseLayout>
+<BaseLayout title={`标签：${tag}`} description={`浏览标签“${tag}”下的公开内容。`}><header class="page-head"><div><p class="kicker">标签内容 / 04</p><h1>#{tag}</h1></div><div><p>共 {entries.length} 条记录。标签会跨越文章、笔记和资源。</p></div></header><section>{entries.map((entry,index)=><EntryCard entry={entry} index={index}/>)}</section></BaseLayout>

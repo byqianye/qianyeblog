@@ -1,44 +1,39 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import ArticleCard from "../../components/ArticleCard.astro";
-import EmptyState from "../../components/EmptyState.astro";
-import { getAllPosts } from "../../lib/content";
-import homeContent from "../../data/home.json";
-
-const posts = await getAllPosts();
-const blogPage = {
-  title: homeContent.blogPageTitle ?? "文章",
-  description: homeContent.blogPageDescription ?? "所有生活随笔、阅读记录和城市散步。",
-  eyebrow: homeContent.blogPageEyebrow ?? "Archive",
-  heading: homeContent.blogPageHeading ?? "文章",
-  intro: homeContent.blogPageIntro ?? "按时间收纳所有公开文字。它们不急着回答什么，只是把生活里值得停顿的片刻留住。",
-  listAriaLabel: homeContent.blogListAriaLabel ?? "文章列表"
-};
+import EntryCard from "../../components/EntryCard.astro";
+import { getGardenEntries, getGardenTags, kindLabels } from "../../lib/garden";
+const entries = await getGardenEntries();
+const tags = await getGardenTags();
 ---
-
-<BaseLayout title={blogPage.title} description={blogPage.description}>
-  <section class="page-intro">
-    <p class="eyebrow">{blogPage.eyebrow}</p>
-    <h1>{blogPage.heading}</h1>
-    <p>{blogPage.intro}</p>
-  </section>
-
-  <section class="archive-list" aria-label={blogPage.listAriaLabel}>
-    {
-      posts.length > 0 ? posts.map((post) => (
-        <ArticleCard
-          href={`/blog/${post.id}`}
-          title={post.data.title}
-          description={post.data.description}
-          pubDate={post.data.pubDate}
-          tags={post.data.tags}
-          category={post.data.category}
-          cover={post.data.cover}
-          coverWidth={post.data.coverWidth}
-          coverHeight={post.data.coverHeight}
-          body={post.body}
-        />
-      )) : <EmptyState title="还没有文章" description="第一篇文章发布后会出现在这里。" />
-    }
-  </section>
+<BaseLayout title="花园" description="按类型与标签浏览浅靥数字花园的全部公开内容。">
+  <header class="page-head"><div><p class="kicker">花园索引 / 02</p><h1>花园</h1></div><div><p>文章、笔记与资源被放在同一个索引中。选择类型或标签，找到下一条值得继续探索的路径。</p></div></header>
+  <section class="filters" aria-label="内容筛选"><button class="active" data-kind="all">全部 <span>{entries.length}</span></button>{Object.entries(kindLabels).map(([kind,label]) => <button data-kind={kind}>{label} <span>{entries.filter((entry)=>entry.data.kind===kind).length}</span></button>)}</section>
+  <div class="tag-filters"><button class="active" data-tag="all">全部标签</button>{tags.map(({tag}) => <button data-tag={tag}>#{tag}</button>)}</div>
+  <section id="garden-list" aria-live="polite">{entries.map((entry,index)=><EntryCard entry={entry} index={index} />)}</section>
+  <p class="empty" hidden>没有符合当前筛选条件的内容。</p>
+  <script>
+    import { matchesGardenFilter } from "../../lib/garden-filter";
+    import type { GardenKind } from "../../lib/garden";
+    const params = new URLSearchParams(location.search);
+    let kind = (params.get("kind") || undefined) as GardenKind | undefined;
+    let tag = params.get("tag") || undefined;
+    const cards = [...document.querySelectorAll<HTMLElement>("[data-kind].entry")];
+    const empty = document.querySelector<HTMLElement>(".empty");
+    const apply = () => {
+      let visible = 0;
+      cards.forEach((card) => {
+        const tags = JSON.parse(card.dataset.tags || "[]") as string[];
+        const show = matchesGardenFilter({ kind: card.dataset.kind as GardenKind, tags }, { kind, tag });
+        card.hidden = !show;
+        if (show) visible += 1;
+      });
+      if (empty) empty.hidden = visible > 0;
+      document.querySelectorAll<HTMLElement>(".filters button").forEach((button) => button.classList.toggle("active", (button.dataset.kind === "all" ? undefined : button.dataset.kind) === kind));
+      document.querySelectorAll<HTMLElement>(".tag-filters button").forEach((button) => button.classList.toggle("active", (button.dataset.tag === "all" ? undefined : button.dataset.tag) === tag));
+    };
+    document.querySelectorAll<HTMLElement>(".filters button").forEach((button) => button.addEventListener("click", () => { kind = button.dataset.kind === "all" ? undefined : button.dataset.kind as GardenKind; apply(); }));
+    document.querySelectorAll<HTMLElement>(".tag-filters button").forEach((button) => button.addEventListener("click", () => { tag = button.dataset.tag === "all" ? undefined : button.dataset.tag; apply(); }));
+    apply();
+  </script>
 </BaseLayout>
+<style>.filters,.tag-filters{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}.filters button,.tag-filters button{min-height:48px;border:0;border-right:1px solid var(--line);background:#fff;padding:.65rem 1.2rem;cursor:pointer}.filters button.active,.tag-filters button.active{background:var(--ink);color:#fff}.filters span{color:var(--accent);margin-left:.4rem}.tag-filters{padding:.6rem}.tag-filters button{border:0;min-height:40px;padding:.4rem .7rem}.tag-filters button.active{background:var(--accent)}</style>

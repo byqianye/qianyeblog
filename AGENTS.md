@@ -12,12 +12,14 @@
 - `src/`: visitor-facing Astro site and content
 - `public/`: static assets and CMS entry files
 - `functions/`: Cloudflare Pages Functions for OAuth
-- `server/`: localhost-only editorial admin service
+- `docs/`: product, architecture, and content contracts
+- `src/generated/`: build-generated media metadata; never edit manually
 - `.tools/`: reproducible verification utilities
 
 ## Constraints
 
 - The visitor site is static and deploys from `main` to Cloudflare Pages.
-- The admin service must bind only to localhost and must never ship credentials, session data, or generated local state.
+- Decap CMS at `/admin` is the only editor; Cloudflare Pages Functions provide GitHub OAuth.
+- Never ship credentials, OAuth state, generated media, or local environment data.
 - Use `corepack pnpm` for commands. Run `check` and `test` before publishing.
 - Keep all public UI copy in Chinese; keep code, comments, and project documentation in English.
